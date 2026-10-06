@@ -1,0 +1,31 @@
+---
+name: Feature Request
+about: Suggest an idea, new algorithm, or learning improvement
+title: "[FEATURE] "
+labels: ["enhancement"]
+assignees: ""
+---
+
+### Is your feature request related to a problem? Please describe.
+
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+
+### Proposed Solution
+
+A clear and concise description of what you want to happen.
+
+### Algorithm / Data Structure Specifics
+
+If proposing a new algorithm or data structure:
+
+- Category (Sorting, Searching, Trees, Graphs, etc.):
+- Time / Space Complexity:
+- Key Visual States Required:
+
+### Alternatives Considered
+
+A clear and concise description of any alternative solutions or features you've considered.
+
+### Additional Context
+
+Add any other context or mockups about the feature request here.
