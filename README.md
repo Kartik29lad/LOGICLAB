@@ -6,17 +6,21 @@ LogicLab is an interactive algorithm and data-structure learning laboratory desi
 
 ---
 
-## Current Status: Phase 1 — Repository and Development Foundation
+## Current Status: Phase 2 — Architectural Skeleton and Module Boundaries
 
-This repository has completed **Phase 0 (Project Governance & Master Setup)** and **Phase 1 (Repository and Development Foundation)**.
+This repository has completed:
 
-The technical foundation, tooling, strict type-checking, code quality invariants, and directory boundaries are fully established and operational.
+- **Phase 0:** Project Governance & Master Setup
+- **Phase 1:** Repository and Development Foundation
+- **Phase 2:** Architectural Skeleton and Module Boundaries
+
+The architectural boundaries, domain contracts, use-case interfaces, repository contracts, trace event models, domain error hierarchy, and automated boundary tests are fully established.
 
 ---
 
 ## Technology Foundation
 
-- **Framework:** Next.js (App Router)
+- **Framework:** Next.js 15 (App Router)
 - **UI & Language:** React 19 & TypeScript (Strict Mode)
 - **Design & Styling:** Design Tokens & Vanilla CSS / CSS Modules
 - **Testing:** Vitest with V8 Coverage
@@ -64,10 +68,12 @@ cp .env.example .env.local
 
 - **Development Guide:** [docs/DEVELOPMENT_SETUP.md](docs/DEVELOPMENT_SETUP.md)
 - **Git Workflow & Branching:** [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md)
+- **Naming & Layer Conventions:** [docs/architecture/NAMING_CONVENTIONS.md](docs/architecture/NAMING_CONVENTIONS.md)
 - **Architectural Decision Log:** [docs/decisions/](docs/decisions/)
 - **Approved Specifications:** [md/](md/)
   - `01_LOGICLAB_PROJECT_DATA_SPECIFICATION.md`
   - `02_LOGICLAB_SYSTEM_ARCHITECTURE.md`
   - `06_LOGICLAB_TECHNOLOGY_STACK_AND_DEVELOPMENT_ENVIRONMENT.md`
   - `09_LOGICLAB_FOLDER_STRUCTURE_AND_CODE_ORGANIZATION.md`
+  - `11_LOGICLAB_API_BACKEND_AND_SERVICE_ARCHITECTURE_SPECIFICATION.md`
   - `14_LOGICLAB_FINAL_IMPLEMENTATION_PLAN.md`
