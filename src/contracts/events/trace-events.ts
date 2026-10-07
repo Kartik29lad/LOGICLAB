@@ -6,13 +6,47 @@
 export type StepActionType =
   | "compare"
   | "swap"
+  | "write"
+  | "read"
+  | "insert"
+  | "remove"
   | "visit"
+  | "enqueue"
+  | "dequeue"
+  | "push"
+  | "pop"
+  | "relax"
+  | "set-current"
+  | "found"
+  | "not-found"
   | "mark-sorted"
   | "select"
   | "pivot"
-  | "insert"
   | "backtrack"
   | "complete";
+
+export const TRACE_EVENT_ACTIONS = {
+  COMPARE: "compare",
+  SWAP: "swap",
+  WRITE: "write",
+  READ: "read",
+  INSERT: "insert",
+  REMOVE: "remove",
+  VISIT: "visit",
+  ENQUEUE: "enqueue",
+  DEQUEUE: "dequeue",
+  PUSH: "push",
+  POP: "pop",
+  RELAX: "relax",
+  SET_CURRENT: "set-current",
+  FOUND: "found",
+  NOT_FOUND: "not-found",
+  MARK_SORTED: "mark-sorted",
+  SELECT: "select",
+  PIVOT: "pivot",
+  BACKTRACK: "backtrack",
+  COMPLETE: "complete",
+} as const;
 
 export interface StepPointer {
   name: string;
