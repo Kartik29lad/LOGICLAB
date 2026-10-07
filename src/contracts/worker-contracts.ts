@@ -1,13 +1,16 @@
 /**
  * Web Worker Message Contracts
  * Defines communication schemas between main thread and background computation workers.
+ * Supports: START, PROGRESS, CANCEL, COMPLETE, ERROR
  */
 
 import type { AlgorithmTrace } from "./events/trace-events";
 
-export interface WorkerExecutionRequest<TInput = unknown> {
+export type WorkerMessageType = "START" | "PROGRESS" | "CANCEL" | "COMPLETE" | "ERROR";
+
+export interface WorkerStartMessage<TInput = unknown> {
   id: string;
-  type: "EXECUTE_ALGORITHM";
+  type: "START";
   algorithmSlug: string;
   input: TInput;
   options?: {
@@ -17,15 +20,26 @@ export interface WorkerExecutionRequest<TInput = unknown> {
   };
 }
 
-export interface WorkerExecutionSuccessResponse<TOutput = unknown, TState = unknown> {
+export interface WorkerCancelMessage {
   id: string;
-  type: "EXECUTION_SUCCESS";
+  type: "CANCEL";
+}
+
+export interface WorkerProgressMessage {
+  id: string;
+  type: "PROGRESS";
+  currentStep: number;
+}
+
+export interface WorkerCompleteMessage<TOutput = unknown, TState = unknown> {
+  id: string;
+  type: "COMPLETE";
   trace: AlgorithmTrace<unknown, TOutput, TState>;
 }
 
-export interface WorkerExecutionErrorResponse {
+export interface WorkerErrorMessage {
   id: string;
-  type: "EXECUTION_ERROR";
+  type: "ERROR";
   error: {
     code: string;
     message: string;
@@ -33,12 +47,18 @@ export interface WorkerExecutionErrorResponse {
   };
 }
 
-export type WorkerExecutionResponse = WorkerExecutionSuccessResponse | WorkerExecutionErrorResponse;
+export type WorkerInboundMessage<TInput = unknown> =
+  WorkerStartMessage<TInput> | WorkerCancelMessage;
 
-export interface WorkerProgressMessage {
-  id: string;
-  type: "EXECUTION_PROGRESS";
-  currentStep: number;
-}
+export type WorkerOutboundMessage<TOutput = unknown, TState = unknown> =
+  WorkerProgressMessage | WorkerCompleteMessage<TOutput, TState> | WorkerErrorMessage;
 
-export type WorkerMessage = WorkerExecutionResponse | WorkerProgressMessage;
+// Backwards compatibility aliases
+export type WorkerExecutionRequest<TInput = unknown> = WorkerStartMessage<TInput>;
+export type WorkerExecutionSuccessResponse<
+  TOutput = unknown,
+  TState = unknown,
+> = WorkerCompleteMessage<TOutput, TState>;
+export type WorkerExecutionErrorResponse = WorkerErrorMessage;
+export type WorkerExecutionResponse = WorkerCompleteMessage | WorkerErrorMessage;
+export type WorkerMessage = WorkerOutboundMessage;
