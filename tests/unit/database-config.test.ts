@@ -7,38 +7,51 @@ describe("Database Configuration Adapter", () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv };
+    process.env.DB_AUTH_MODE = "sql";
+    process.env.DB_USER = "sa";
+    process.env.DB_PASSWORD = "SecretPassword123!";
   });
 
   afterEach(() => {
     process.env = originalEnv;
   });
 
-  it("parses default values when no environment variables are set", () => {
+  it("parses SQL authentication defaults", () => {
     delete process.env.DB_HOST;
     delete process.env.DB_PORT;
     delete process.env.DB_NAME;
-    delete process.env.DB_USER;
-    delete process.env.DB_PASSWORD;
 
     const config = getDatabaseConfig();
     expect(config.server).toBe("localhost");
     expect(config.port).toBe(1433);
     expect(config.database).toBe("LogicLab_Development");
+    expect(config.authMode).toBe("sql");
     expect(config.trustServerCertificate).toBe(true);
     expect(config.encrypt).toBe(false);
   });
 
-  it("parses named instances correctly (e.g. .\\SQLEXPRESS)", () => {
+  it("parses named instances correctly", () => {
     process.env.DB_HOST = ".\\SQLEXPRESS";
     process.env.DB_NAME = "LogicLab_Development";
 
     const config = getDatabaseConfig();
     expect(config.server).toBe("localhost");
     expect(config.instanceName).toBe("SQLEXPRESS");
-    expect(config.database).toBe("LogicLab_Development");
   });
 
-  it("parses domain username correctly (e.g. ASUSTUF15\\karti)", () => {
+  it("parses Windows Authentication explicitly", () => {
+    process.env.DB_AUTH_MODE = "windows";
+    process.env.DB_HOST = ".\\SQLEXPRESS";
+    delete process.env.DB_USER;
+    delete process.env.DB_PASSWORD;
+
+    const config = getDatabaseConfig();
+    expect(config.authMode).toBe("windows");
+    expect(config.server).toBe("localhost");
+    expect(config.instanceName).toBe("SQLEXPRESS");
+  });
+
+  it("parses domain usernames for SQL authentication", () => {
     process.env.DB_USER = "ASUSTUF15\\karti";
 
     const config = getDatabaseConfig();
@@ -46,12 +59,19 @@ describe("Database Configuration Adapter", () => {
     expect(config.user).toBe("karti");
   });
 
-  it("converts to mssql client configuration format", () => {
+  it("rejects SQL authentication without credentials", () => {
+    delete process.env.DB_USER;
+    delete process.env.DB_PASSWORD;
+
+    expect(() => getDatabaseConfig()).toThrow(
+      "SQL authentication requires DB_USER and DB_PASSWORD"
+    );
+  });
+
+  it("converts SQL authentication to mssql client configuration", () => {
     process.env.DB_HOST = "localhost";
     process.env.DB_PORT = "1433";
     process.env.DB_NAME = "LogicLab_Test";
-    process.env.DB_USER = "sa";
-    process.env.DB_PASSWORD = "SecretPassword123!";
 
     const cfg = getDatabaseConfig();
     const mssqlConfig = toMssqlConfig(cfg);
@@ -62,5 +82,10 @@ describe("Database Configuration Adapter", () => {
     expect(mssqlConfig.user).toBe("sa");
     expect(mssqlConfig.password).toBe("SecretPassword123!");
     expect(mssqlConfig.options?.trustServerCertificate).toBe(true);
+  });
+
+  it("does not silently downgrade Windows Authentication to SQL Authentication", () => {
+    process.env.DB_AUTH_MODE = "windows";
+    expect(() => toMssqlConfig(getDatabaseConfig())).toThrow("msnodesqlv8");
   });
 });

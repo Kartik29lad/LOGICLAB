@@ -1,0 +1,112 @@
+/* V2-19 DFS laboratory */
+.viz-dfs-inspector {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.8rem;
+  background: var(--color-surface-subtle);
+}
+.viz-dfs-inspector__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+.viz-dfs-inspector__header span {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+.viz-dfs-stack {
+  display: grid;
+  gap: 0.4rem;
+}
+.viz-dfs-stack > span {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.viz-dfs-stack > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-height: 2rem;
+  align-items: center;
+}
+.viz-dfs-stack__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  background: var(--color-surface);
+  font-weight: 650;
+}
+.viz-dfs-stack__item small {
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+}
+.viz-dfs-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.viz-dfs-facts span {
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  background: var(--color-surface);
+  font-size: 0.78rem;
+}
+.viz-dfs-facts strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.viz-dfs-backtrack {
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-surface);
+  font-size: 0.82rem;
+}
+.viz-graph-node[data-state="path"] .viz-graph-node-circle {
+  stroke: var(--color-success);
+  stroke-width: 4;
+}
+.viz-graph-node[data-state="discovered"] .viz-graph-node-circle {
+  stroke-dasharray: 4 3;
+}
+.viz-graph-node[data-state="current"] .viz-graph-node-halo {
+  animation: logiclab-dfs-pulse 900ms ease-in-out infinite alternate;
+}
+@keyframes logiclab-dfs-pulse {
+  from {
+    opacity: 0.35;
+    transform: scale(0.96);
+    transform-origin: center;
+  }
+  to {
+    opacity: 0.9;
+    transform: scale(1.08);
+    transform-origin: center;
+  }
+}
+@media (max-width: 700px) {
+  .viz-dfs-facts {
+    grid-template-columns: 1fr;
+  }
+  .viz-dfs-inspector__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .viz-graph-node[data-state="current"] .viz-graph-node-halo {
+    animation: none;
+  }
+}

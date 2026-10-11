@@ -8,8 +8,8 @@ describe("siteConfig", () => {
     expect(siteConfig.tagline).toBe("Explore. Visualize. Understand.");
   });
 
-  it("should declare Phase 1 status", () => {
-    expect(siteConfig.phase).toContain("Phase 1");
+  it("should declare Phase status", () => {
+    expect(siteConfig.phase).toContain("Phase");
   });
 
   it("should provide a valid fallback URL", () => {

@@ -3,11 +3,11 @@ import path from "path";
 import { describe, expect, it } from "vitest";
 
 const FORBIDDEN_SQL_DRIVERS = [
-  /from\s+['"]mssql['"]/,
-  /from\s+['"]tedious['"]/,
-  /from\s+['"]pg['"]/,
-  /from\s+['"]mysql['"]/,
-  /from\s+['"]sqlite3['"]/,
+  /from\s+["']mssql["']/,
+  /from\s+["']tedious["']/,
+  /from\s+["']pg["']/,
+  /from\s+["']mysql["']/,
+  /from\s+["']sqlite3["']/,
 ];
 
 const scanDirectory = (
@@ -30,70 +30,106 @@ const scanDirectory = (
   }
 };
 
-describe("Phase 2 — Architecture Boundary Invariants", () => {
-  it("prohibits src/core from importing React, Next.js, or SQL drivers", () => {
-    const coreDir = path.resolve(__dirname, "../../src/core");
-    const forbiddenPatterns = [
-      /from\s+['"]react['"]/,
-      /from\s+['"]next(\/.*)?['"]/,
-      ...FORBIDDEN_SQL_DRIVERS,
-    ];
+const assertNoImports = (dir: string, forbiddenPatterns: RegExp[], description: string): void => {
+  scanDirectory(dir, (file, content) => {
+    for (const pattern of forbiddenPatterns) {
+      expect(content, `${description}: ${file}`).not.toMatch(pattern);
+    }
+  });
+};
 
-    scanDirectory(coreDir, (file, content) => {
-      for (const pattern of forbiddenPatterns) {
-        expect(content, `Violation in ${file}`).not.toMatch(pattern);
-      }
-    });
+describe("Phase 2 — Architecture Boundary Invariants", () => {
+  it("prohibits core from importing presentation, application, framework, or SQL code", () => {
+    const coreDir = path.resolve(__dirname, "../../src/core");
+    assertNoImports(
+      coreDir,
+      [
+        /from\s+["']react["']/,
+        /from\s+["']next(\/.*)?["']/,
+        /from\s+["']@\/app(\/.*)?["']/,
+        /from\s+["']@\/features(\/.*)?["']/,
+        /from\s+["']@\/components(\/.*)?["']/,
+        /from\s+["']@\/server(\/.*)?["']/,
+        ...FORBIDDEN_SQL_DRIVERS,
+      ],
+      "Core dependency violation"
+    );
   });
 
-  it("prohibits UI components & features from directly accessing SQL drivers", () => {
-    const uiDirs = [
+  it("prohibits server application code from importing presentation or app code", () => {
+    const serverDir = path.resolve(__dirname, "../../src/server");
+    assertNoImports(
+      serverDir,
+      [
+        /from\s+["']@\/app(\/.*)?["']/,
+        /from\s+["']@\/features(\/.*)?["']/,
+        /from\s+["']@\/components(\/.*)?["']/,
+      ],
+      "Server dependency violation"
+    );
+  });
+
+  it("prohibits presentation code from importing server implementations, core implementations, or SQL drivers", () => {
+    const presentationDirs = [
       path.resolve(__dirname, "../../src/components"),
       path.resolve(__dirname, "../../src/features"),
     ];
 
-    for (const dir of uiDirs) {
-      scanDirectory(dir, (file, content) => {
-        for (const pattern of FORBIDDEN_SQL_DRIVERS) {
-          expect(content, `Direct SQL driver access in UI: ${file}`).not.toMatch(pattern);
-        }
-      });
+    for (const dir of presentationDirs) {
+      assertNoImports(
+        dir,
+        [
+          /from\s+["']@\/server(\/.*)?["']/,
+          /from\s+["']@\/core(\/.*)?["']/,
+          ...FORBIDDEN_SQL_DRIVERS,
+        ],
+        "Presentation dependency violation"
+      );
     }
   });
 
-  it("prohibits API routes from directly accessing SQL drivers", () => {
+  it("prohibits API routes from importing SQL drivers or core implementations directly", () => {
     const apiDir = path.resolve(__dirname, "../../src/app/api");
-
-    scanDirectory(apiDir, (file, content) => {
-      for (const pattern of FORBIDDEN_SQL_DRIVERS) {
-        expect(content, `Direct SQL driver access in route: ${file}`).not.toMatch(pattern);
-      }
-    });
+    assertNoImports(
+      apiDir,
+      [...FORBIDDEN_SQL_DRIVERS, /from\s+["']@\/core(\/.*)?["']/],
+      "API route dependency violation"
+    );
   });
 
-  it("prohibits src/content from importing UI components or React", () => {
+  it("prohibits content from importing UI, server, or framework code", () => {
     const contentDir = path.resolve(__dirname, "../../src/content");
-    const forbiddenPatterns = [/from\s+['"]react['"]/, /from\s+['"]@\/components(\/.*)?['"]/];
-
-    scanDirectory(contentDir, (file, content) => {
-      for (const pattern of forbiddenPatterns) {
-        expect(content, `UI import violation in content: ${file}`).not.toMatch(pattern);
-      }
-    });
+    assertNoImports(
+      contentDir,
+      [
+        /from\s+["']react["']/,
+        /from\s+["']next(\/.*)?["']/,
+        /from\s+["']@\/components(\/.*)?["']/,
+        /from\s+["']@\/features(\/.*)?["']/,
+        /from\s+["']@\/server(\/.*)?["']/,
+      ],
+      "Content dependency violation"
+    );
   });
 
-  it("prohibits src/contracts from importing React or database drivers", () => {
+  it("prohibits contracts from importing framework, presentation, server, or database code", () => {
     const contractsDir = path.resolve(__dirname, "../../src/contracts");
-    const forbiddenPatterns = [/from\s+['"]react['"]/, ...FORBIDDEN_SQL_DRIVERS];
-
-    scanDirectory(contractsDir, (file, content) => {
-      for (const pattern of forbiddenPatterns) {
-        expect(content, `Violation in contract: ${file}`).not.toMatch(pattern);
-      }
-    });
+    assertNoImports(
+      contractsDir,
+      [
+        /from\s+["']react["']/,
+        /from\s+["']next(\/.*)?["']/,
+        /from\s+["']@\/app(\/.*)?["']/,
+        /from\s+["']@\/features(\/.*)?["']/,
+        /from\s+["']@\/components(\/.*)?["']/,
+        /from\s+["']@\/server(\/.*)?["']/,
+        ...FORBIDDEN_SQL_DRIVERS,
+      ],
+      "Contract dependency violation"
+    );
   });
 
-  it("enforces the 400-physical-lines maximum limit across all source files", () => {
+  it("enforces the 400-physical-lines maximum limit across source, tests, and scripts", () => {
     const maxLines = 400;
     const targetDirs = [
       path.resolve(__dirname, "../../src"),

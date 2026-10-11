@@ -1,3 +1,4 @@
+import type { AlgorithmStepObserver } from "../../../contracts/algorithm-observer";
 import type { AlgorithmMetadata, SortResult } from "../../../contracts/algorithm.types";
 
 export const QUICK_SORT_METADATA: AlgorithmMetadata = {
@@ -13,7 +14,7 @@ export const QUICK_SORT_METADATA: AlgorithmMetadata = {
       average: "O(n log n)",
       worst: "O(n^2)",
     },
-    space: "O(log n)",
+    space: "O(log n) average; O(n) worst-case",
     isStable: false,
     isInPlace: true,
   },
@@ -22,7 +23,10 @@ export const QUICK_SORT_METADATA: AlgorithmMetadata = {
 /**
  * Pure Quick Sort using Lomuto partition scheme.
  */
-export function quickSort(input: readonly number[]): SortResult<number> {
+export function quickSort(
+  input: readonly number[],
+  observer?: AlgorithmStepObserver
+): SortResult<number> {
   const array = [...input];
   let comparisons = 0;
   let swaps = 0;
@@ -37,16 +41,19 @@ export function quickSort(input: readonly number[]): SortResult<number> {
 
   function partition(low: number, high: number): number {
     const pivot = array[high]!;
+    observer?.emit("PIVOT", { index: high, value: pivot }, [...array]);
     let i = low - 1;
 
     for (let j = low; j < high; j++) {
       comparisons++;
+      observer?.emit("COMPARE", { indexes: [j, high] }, [...array]);
       if (array[j]! <= pivot) {
         i++;
         const temp = array[i]!;
         array[i] = array[j]!;
         array[j] = temp;
         swaps++;
+        observer?.emit("SWAP", { indexes: [i, j] }, [...array]);
       }
     }
 
@@ -54,6 +61,7 @@ export function quickSort(input: readonly number[]): SortResult<number> {
     array[i + 1] = array[high]!;
     array[high] = temp;
     swaps++;
+    observer?.emit("SWAP", { indexes: [i + 1, high] }, [...array]);
 
     return i + 1;
   }

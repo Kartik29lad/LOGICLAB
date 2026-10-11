@@ -14,6 +14,7 @@ export interface AlgorithmMetadata {
 export interface SortMetrics {
   comparisons: number;
   swaps: number;
+  writes?: number;
 }
 
 export interface SortResult<T> {

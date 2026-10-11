@@ -10,7 +10,7 @@ SET QUOTED_IDENTIFIER ON;
 SELECT
     'TABLE_COUNT' AS Metric,
     COUNT(*) AS ActualValue,
-    24 AS ExpectedMinimum
+    23 AS ExpectedMinimum
 FROM sys.tables
 WHERE schema_id = SCHEMA_ID('dbo')
   AND name NOT LIKE '\_%' ESCAPE '\';

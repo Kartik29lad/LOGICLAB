@@ -1,0 +1,2 @@
+export const explanation =
+  "Find the minimum in the unsorted region and place it at the region boundary.\\n\\nChoose the first unsorted position. Scan the remaining values for the minimum. Remember the minimum index. Swap the minimum into the boundary position. Advance the sorted boundary. The selected minimum is no larger than any remaining unsorted value, so placing it next fixes the next sorted position.";

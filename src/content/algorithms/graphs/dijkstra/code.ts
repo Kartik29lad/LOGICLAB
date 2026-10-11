@@ -1,0 +1,11 @@
+import type { CodeReference } from "../../../schema/content-types";
+
+export const code: CodeReference[] = [
+  {
+    language: "typescript",
+    entryPoint: "dijkstra",
+    source:
+      'import type { Graph } from "../models/graph";\n\nexport interface DijkstraResult {\n  distances: Record<string, number>;\n  predecessors: Record<string, string | null>;\n  getPathTo: (targetId: string) => string[];\n}\n\n/**\n * Dijkstra\'s shortest path algorithm for graphs with non-negative edge weights.\n */\nexport function dijkstra(graph: Graph, startNodeId: string): DijkstraResult {\n  const distances: Record<string, number> = {};\n  const predecessors: Record<string, string | null> = {};\n  const unvisited = new Set<string>();\n\n  for (const node of graph.getNodes()) {\n    distances[node.id] = Infinity;\n    predecessors[node.id] = null;\n    unvisited.add(node.id);\n  }\n\n  if (!graph.hasNode(startNodeId)) {\n    return {\n      distances,\n      predecessors,\n      getPathTo: () => [],\n    };\n  }\n\n  distances[startNodeId] = 0;\n\n  while (unvisited.size > 0) {\n    let closestNodeId: string | null = null;\n    let shortestDist = Infinity;\n\n    for (const nodeId of unvisited) {\n      if (distances[nodeId]! < shortestDist) {\n        shortestDist = distances[nodeId]!;\n        closestNodeId = nodeId;\n      }\n    }\n\n    if (closestNodeId === null || shortestDist === Infinity) {\n      break;\n    }\n\n    unvisited.delete(closestNodeId);\n\n    for (const neighbor of graph.getNeighbors(closestNodeId)) {\n      if (!unvisited.has(neighbor.nodeId)) continue;\n\n      const alt = distances[closestNodeId]! + neighbor.weight;\n      if (alt < distances[neighbor.nodeId]!) {\n        distances[neighbor.nodeId] = alt;\n        predecessors[neighbor.nodeId] = closestNodeId;\n      }\n    }\n  }\n\n  function getPathTo(targetId: string): string[] {\n    const path: string[] = [];\n    let current: string | null = targetId;\n\n    if (distances[targetId] === Infinity || !graph.hasNode(targetId)) {\n      return [];\n    }\n\n    while (current !== null) {\n      path.unshift(current);\n      current = predecessors[current] ?? null;\n    }\n    return path;\n  }\n\n  return { distances, predecessors, getPathTo };\n}\n',
+    stepMappings: [{ action: "MAIN", startLine: 1, endLine: 78 }],
+  },
+];

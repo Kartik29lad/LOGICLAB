@@ -1,0 +1,2 @@
+export const explanation =
+  "Prioritize the frontier node with the smallest f(n)=g(n)+h(n).\\n\\nSet the start node cost to zero. Compute f = g + h for frontier nodes. Choose the lowest-f frontier node. Relax its neighbors and update parent/cost data. Stop when the target is selected or the frontier is exhausted. An admissible and consistent heuristic preserves optimality while guiding the search toward the target.";

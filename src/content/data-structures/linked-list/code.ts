@@ -1,0 +1,11 @@
+import type { CodeReference } from "../../schema/content-types";
+
+export const code: CodeReference[] = [
+  {
+    language: "typescript",
+    entryPoint: "linked-list",
+    source:
+      "export class SinglyLinkedListNode<T> {\n  constructor(\n    public value: T,\n    public next: SinglyLinkedListNode<T> | null = null\n  ) {}\n}\n\nexport class SinglyLinkedList<T> {\n  public head: SinglyLinkedListNode<T> | null = null;\n  public tail: SinglyLinkedListNode<T> | null = null;\n  private count = 0;\n\n  public insertHead(value: T): void {\n    const node = new SinglyLinkedListNode(value, this.head);\n    this.head = node;\n    if (!this.tail) {\n      this.tail = node;\n    }\n    this.count++;\n  }\n\n  public insertTail(value: T): void {\n    const node = new SinglyLinkedListNode(value);\n    if (!this.head) {\n      this.head = node;\n      this.tail = node;\n    } else {\n      this.tail!.next = node;\n      this.tail = node;\n    }\n    this.count++;\n  }\n\n  public delete(value: T): boolean {\n    if (!this.head) return false;\n\n    if (this.head.value === value) {\n      this.head = this.head.next;\n      if (!this.head) this.tail = null;\n      this.count--;\n      return true;\n    }\n\n    let current = this.head;\n    while (current.next && current.next.value !== value) {\n      current = current.next;\n    }\n\n    if (current.next) {\n      if (current.next === this.tail) {\n        this.tail = current;\n      }\n      current.next = current.next.next;\n      this.count--;\n      return true;\n    }\n\n    return false;\n  }\n\n  public find(predicate: (val: T) => boolean): T | null {\n    let current = this.head;\n    while (current) {\n      if (predicate(current.value)) return current.value;\n      current = current.next;\n    }\n    return null;\n  }\n\n  public size(): number {\n    return this.count;\n  }\n\n  public isEmpty(): boolean {\n    return this.count === 0;\n  }\n\n  public toArray(): T[] {\n    const result: T[] = [];\n    let current = this.head;\n    while (current) {\n      result.push(current.value);\n      current = current.next;\n    }\n    return result;\n  }\n}\n",
+    stepMappings: [{ action: "MAIN", startLine: 1, endLine: 88 }],
+  },
+];

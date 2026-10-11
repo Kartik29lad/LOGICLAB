@@ -1,3 +1,4 @@
+import type { AlgorithmStepObserver } from "../../../contracts/algorithm-observer";
 import type { AlgorithmMetadata, SortResult } from "../../../contracts/algorithm.types";
 
 export const MERGE_SORT_METADATA: AlgorithmMetadata = {
@@ -22,15 +23,19 @@ export const MERGE_SORT_METADATA: AlgorithmMetadata = {
 /**
  * Pure Merge Sort.
  */
-export function mergeSort(input: readonly number[]): SortResult<number> {
+export function mergeSort(
+  input: readonly number[],
+  observer?: AlgorithmStepObserver
+): SortResult<number> {
   const array = [...input];
   let comparisons = 0;
-  let swaps = 0; // count auxiliary write/merge operations
+  let writes = 0; // count auxiliary writes produced during merging
 
   function divideAndConquer(arr: number[]): number[] {
     if (arr.length <= 1) return arr;
 
     const mid = Math.floor(arr.length / 2);
+    observer?.emit("PARTITION", { length: arr.length, mid }, [...array]);
     const left = divideAndConquer(arr.slice(0, mid));
     const right = divideAndConquer(arr.slice(mid));
 
@@ -44,6 +49,7 @@ export function mergeSort(input: readonly number[]): SortResult<number> {
 
     while (i < left.length && j < right.length) {
       comparisons++;
+      observer?.emit("COMPARE", { left: left[i], right: right[j] }, [...array]);
       if (left[i]! <= right[j]!) {
         merged.push(left[i]!);
         i++;
@@ -51,18 +57,19 @@ export function mergeSort(input: readonly number[]): SortResult<number> {
         merged.push(right[j]!);
         j++;
       }
-      swaps++;
+      writes++;
+      observer?.emit("WRITE", { value: merged.at(-1) }, [...array]);
     }
 
     while (i < left.length) {
       merged.push(left[i]!);
-      swaps++;
+      writes++;
       i++;
     }
 
     while (j < right.length) {
       merged.push(right[j]!);
-      swaps++;
+      writes++;
       j++;
     }
 
@@ -73,6 +80,6 @@ export function mergeSort(input: readonly number[]): SortResult<number> {
 
   return {
     sorted,
-    metrics: { comparisons, swaps },
+    metrics: { comparisons, swaps: 0, writes },
   };
 }

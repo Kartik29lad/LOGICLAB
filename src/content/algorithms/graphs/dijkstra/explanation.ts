@@ -1,0 +1,2 @@
+export const explanation =
+  "Repeatedly finalize the closest unsettled node and relax its outgoing edges.\\n\\nInitialize source distance to zero and others to infinity. Select the unsettled node with the smallest distance. Relax each outgoing edge. Update a neighbor when a shorter route is found. Repeat until no reachable unsettled node remains. With non-negative weights, the closest unsettled node cannot later receive a shorter path through another unsettled node.";

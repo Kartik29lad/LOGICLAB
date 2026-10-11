@@ -1,0 +1,2 @@
+export const explanation =
+  "Take the next value and insert it into the correct position in the sorted prefix.\\n\\nStart with the first value as a sorted prefix. Select the next value as the key. Shift larger prefix values one position right. Insert the key into the open position. Repeat until the array is consumed. At each iteration the prefix before the current index is sorted, so shifting larger values creates the correct insertion position.";

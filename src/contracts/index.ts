@@ -9,6 +9,7 @@ export * from "./api/progress-dto";
 
 export * from "./events/trace-events";
 export * from "./events/visualization-state";
+export * from "./execution";
 
 export * from "./repositories/user-repository.contract";
 export * from "./repositories/progress-repository.contract";

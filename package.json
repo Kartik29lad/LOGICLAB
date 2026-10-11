@@ -19,6 +19,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "check:file-size": "tsx scripts/build/check-file-size.ts",
+    "check:architecture": "vitest run tests/unit/architecture-boundaries.test.ts",
     "db:migrate": "tsx scripts/database/migrate.ts",
     "db:seed": "tsx scripts/database/seed.ts",
     "db:reset": "tsx scripts/database/reset.ts",

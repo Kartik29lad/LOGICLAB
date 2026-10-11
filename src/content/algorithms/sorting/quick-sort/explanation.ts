@@ -1,0 +1,2 @@
+export const explanation =
+  "Partition a range around a pivot so smaller values go left and larger values go right.\\n\\nChoose a pivot. Partition the active range around the pivot. Place the pivot at its partition boundary. Recursively sort the left range. Recursively sort the right range. After partitioning, the pivot is in a valid final position and the two remaining ranges can be solved independently.";

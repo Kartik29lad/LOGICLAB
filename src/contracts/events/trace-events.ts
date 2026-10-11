@@ -1,52 +1,105 @@
-/**
- * Trace Event Contracts for LogicLab Execution Engine
- * Specifies step snapshots, highlight actions, and metrics emitted by algorithms.
- */
+/** Canonical execution event and trace contracts for Phase 7. */
 
+export const EXECUTION_EVENT_TYPES = [
+  "START",
+  "COMPARE",
+  "SWAP",
+  "WRITE",
+  "READ",
+  "INSERT",
+  "REMOVE",
+  "VISIT",
+  "ENQUEUE",
+  "DEQUEUE",
+  "PUSH",
+  "POP",
+  "RELAX",
+  "SET_CURRENT",
+  "FOUND",
+  "NOT_FOUND",
+  "PARTITION",
+  "MERGE",
+  "ROTATE",
+  "MARK_SORTED",
+  "SELECT",
+  "PIVOT",
+  "BACKTRACK",
+  "COMPLETE",
+] as const;
+
+export type ExecutionEventType = (typeof EXECUTION_EVENT_TYPES)[number];
+
+export interface TraceEntityReference {
+  entityType:
+    "array-index" | "node" | "edge" | "stack-item" | "queue-item" | "tree-node" | "generic";
+  id: string | number;
+}
+
+export interface TraceCodeReference {
+  codeId?: string;
+  lineNumbers?: number[];
+}
+
+export interface TraceExplanationReference {
+  explanationId?: string;
+  text?: string;
+}
+
+export interface TraceMetricSnapshot {
+  comparisons: number;
+  swaps: number;
+  reads: number;
+  writes: number;
+  visits: number;
+  iterations: number;
+  elapsedMs: number;
+}
+
+export interface CanonicalExecutionEvent<TState = unknown, TPayload = unknown> {
+  stepIndex: number;
+  type: ExecutionEventType;
+  payload?: TPayload;
+  stateBefore?: TState;
+  stateAfter?: TState;
+  references?: TraceEntityReference[];
+  description?: string;
+  explanation?: TraceExplanationReference;
+  codeReference?: TraceCodeReference;
+  pseudocodeReference?: { pseudocodeId?: string; sectionId?: string };
+  metrics?: TraceMetricSnapshot;
+}
+
+export interface ExecutionTraceStep<TState = unknown, TPayload = unknown> {
+  stepIndex: number;
+  event: CanonicalExecutionEvent<TState, TPayload>;
+  stateBefore: TState;
+  stateAfter: TState;
+  metrics: TraceMetricSnapshot;
+}
+
+export interface CanonicalExecutionTrace<TInput = unknown, TOutput = unknown, TState = unknown> {
+  executionId: string;
+  algorithmSlug: string;
+  input: TInput;
+  output?: TOutput;
+  initialState: TState;
+  steps: ExecutionTraceStep<TState>[];
+  finalState: TState;
+  metrics: TraceMetricSnapshot;
+  status: "completed" | "failed" | "cancelled";
+}
+
+/** Backward-compatible API trace shape retained for existing consumers. */
 export type StepActionType =
   | "compare"
   | "swap"
-  | "write"
-  | "read"
-  | "insert"
-  | "remove"
   | "visit"
-  | "enqueue"
-  | "dequeue"
-  | "push"
-  | "pop"
-  | "relax"
-  | "set-current"
-  | "found"
-  | "not-found"
   | "mark-sorted"
   | "select"
   | "pivot"
+  | "insert"
   | "backtrack"
   | "complete";
-
-export const TRACE_EVENT_ACTIONS = {
-  COMPARE: "compare",
-  SWAP: "swap",
-  WRITE: "write",
-  READ: "read",
-  INSERT: "insert",
-  REMOVE: "remove",
-  VISIT: "visit",
-  ENQUEUE: "enqueue",
-  DEQUEUE: "dequeue",
-  PUSH: "push",
-  POP: "pop",
-  RELAX: "relax",
-  SET_CURRENT: "set-current",
-  FOUND: "found",
-  NOT_FOUND: "not-found",
-  MARK_SORTED: "mark-sorted",
-  SELECT: "select",
-  PIVOT: "pivot",
-  BACKTRACK: "backtrack",
-  COMPLETE: "complete",
-} as const;
 
 export interface StepPointer {
   name: string;
@@ -81,7 +134,7 @@ export interface ExecutionStep<TState = unknown> {
 
 export interface AlgorithmTrace<TInput = unknown, TOutput = unknown, TState = unknown> {
   algorithmSlug: string;
-  category: "sorting" | "searching" | "graph" | "tree" | "dynamic-programming";
+  category: "sorting" | "searching" | "graph" | "tree" | "data-structure" | "dynamic-programming";
   input: TInput;
   output: TOutput;
   steps: ExecutionStep<TState>[];

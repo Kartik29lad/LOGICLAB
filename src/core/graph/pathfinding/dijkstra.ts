@@ -1,3 +1,4 @@
+import type { AlgorithmStepObserver } from "../../algorithms/contracts/algorithm-observer";
 import type { Graph } from "../models/graph";
 
 export interface DijkstraResult {
@@ -9,7 +10,11 @@ export interface DijkstraResult {
 /**
  * Dijkstra's shortest path algorithm for graphs with non-negative edge weights.
  */
-export function dijkstra(graph: Graph, startNodeId: string): DijkstraResult {
+export function dijkstra(
+  graph: Graph,
+  startNodeId: string,
+  observer?: AlgorithmStepObserver
+): DijkstraResult {
   const distances: Record<string, number> = {};
   const predecessors: Record<string, string | null> = {};
   const unvisited = new Set<string>();
@@ -46,6 +51,11 @@ export function dijkstra(graph: Graph, startNodeId: string): DijkstraResult {
     }
 
     unvisited.delete(closestNodeId);
+    observer?.emit(
+      "VISIT",
+      { node: closestNodeId, distances: { ...distances } },
+      { distances: { ...distances }, current: closestNodeId }
+    );
 
     for (const neighbor of graph.getNeighbors(closestNodeId)) {
       if (!unvisited.has(neighbor.nodeId)) continue;
@@ -54,6 +64,11 @@ export function dijkstra(graph: Graph, startNodeId: string): DijkstraResult {
       if (alt < distances[neighbor.nodeId]!) {
         distances[neighbor.nodeId] = alt;
         predecessors[neighbor.nodeId] = closestNodeId;
+        observer?.emit(
+          "RELAX",
+          { from: closestNodeId, to: neighbor.nodeId, distance: alt },
+          { distances: { ...distances }, current: closestNodeId }
+        );
       }
     }
   }

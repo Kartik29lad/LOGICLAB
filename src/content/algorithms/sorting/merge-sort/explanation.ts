@@ -1,0 +1,2 @@
+export const explanation =
+  "Split the array until subarrays are trivial, then merge sorted halves.\\n\\nSplit the current range into halves. Recursively sort each half. Compare the front values of both halves. Write the smaller value into the merged range. Continue until the full range is rebuilt. Merging two sorted halves produces one sorted range, and recursion makes every half sorted before merging.";

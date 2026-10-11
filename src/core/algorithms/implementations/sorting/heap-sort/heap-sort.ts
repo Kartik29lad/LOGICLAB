@@ -1,3 +1,4 @@
+import type { AlgorithmStepObserver } from "../../../contracts/algorithm-observer";
 import type { AlgorithmMetadata, SortResult } from "../../../contracts/algorithm.types";
 
 export const HEAP_SORT_METADATA: AlgorithmMetadata = {
@@ -22,7 +23,10 @@ export const HEAP_SORT_METADATA: AlgorithmMetadata = {
 /**
  * Pure Heap Sort.
  */
-export function heapSort(input: readonly number[]): SortResult<number> {
+export function heapSort(
+  input: readonly number[],
+  observer?: AlgorithmStepObserver
+): SortResult<number> {
   const array = [...input];
   let comparisons = 0;
   let swaps = 0;
@@ -35,6 +39,7 @@ export function heapSort(input: readonly number[]): SortResult<number> {
 
     if (left < size) {
       comparisons++;
+      observer?.emit("COMPARE", { indexes: [left, largest] }, [...array]);
       if (array[left]! > array[largest]!) {
         largest = left;
       }
@@ -42,6 +47,7 @@ export function heapSort(input: readonly number[]): SortResult<number> {
 
     if (right < size) {
       comparisons++;
+      observer?.emit("COMPARE", { indexes: [right, largest] }, [...array]);
       if (array[right]! > array[largest]!) {
         largest = right;
       }
@@ -52,6 +58,7 @@ export function heapSort(input: readonly number[]): SortResult<number> {
       array[rootIdx] = array[largest]!;
       array[largest] = temp;
       swaps++;
+      observer?.emit("SWAP", { indexes: [rootIdx, largest] }, [...array]);
 
       heapify(size, largest);
     }

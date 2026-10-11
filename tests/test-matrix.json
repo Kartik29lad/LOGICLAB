@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "layers": [
+    {
+      "id": "unit-core",
+      "command": "npm run test:core",
+      "paths": ["tests/unit/core"]
+    },
+    {
+      "id": "unit-features",
+      "command": "npm run test:features",
+      "paths": ["tests/unit/features"]
+    },
+    {
+      "id": "security",
+      "command": "npm run test:security",
+      "paths": ["tests/unit/server/security", "tests/unit/server/auth"]
+    },
+    {
+      "id": "content",
+      "command": "npm run test:content",
+      "paths": ["tests/unit/content"]
+    },
+    {
+      "id": "visualization",
+      "command": "npm run test:visualization",
+      "paths": [
+        "tests/unit/features/visualizer",
+        "tests/unit/core/visualization",
+        "tests/visualization"
+      ]
+    },
+    {
+      "id": "regression",
+      "command": "npm run test:regression",
+      "paths": ["tests/regression"]
+    },
+    {
+      "id": "integration",
+      "command": "npm run test:integration",
+      "paths": ["tests/integration"]
+    },
+    {
+      "id": "e2e",
+      "command": "npm run test:e2e:smoke",
+      "paths": ["tests/e2e"]
+    },
+    {
+      "id": "visualizer-v2-foundation",
+      "command": "npm run test:visualizer:v2",
+      "paths": ["tests/helpers", "tests/unit/features/visualizer/v2"]
+    },
+    {
+      "id": "visualizer-v2-synchronization",
+      "command": "npm run test:visualizer:v2",
+      "paths": ["tests/unit/features/visualizer/v2"]
+    },
+    {
+      "id": "visualizer-v2-interaction",
+      "command": "npm run test:visualizer:v2",
+      "paths": ["tests/unit/features/visualizer/v2"]
+    },
+    {
+      "id": "visualizer-v2-prediction",
+      "command": "npm run test:visualizer:v2",
+      "paths": ["tests/unit/features/visualizer/v2"]
+    },
+    {
+      "id": "visualizer-v2-accessibility",
+      "command": "npm run test:accessibility",
+      "paths": ["tests/unit/features/visualizer/v2/accessibility-invariants.test.ts"]
+    },
+    {
+      "id": "visualizer-v2-responsive",
+      "command": "npm run test:responsive",
+      "paths": ["tests/unit/features/visualizer/v2/responsive-contracts.test.ts"]
+    },
+    {
+      "id": "visualizer-v2-visual-regression",
+      "command": "npm run test:regression",
+      "paths": ["tests/regression/visualizer"]
+    },
+    {
+      "id": "visualizer-v2-performance",
+      "command": "npm run test:performance",
+      "paths": ["tests/unit/features/visualizer/v2/performance-budgets.test.ts"]
+    },
+    {
+      "id": "visualizer-v2-security-regression",
+      "command": "npm run test:security:visualizer",
+      "paths": ["tests/security/visualizer"]
+    }
+  ],
+  "criticalDomains": [
+    "algorithm correctness",
+    "execution and trace correctness",
+    "visualization/playback",
+    "challenge evaluation",
+    "authentication and authorization",
+    "API validation and errors",
+    "database integrity and transactions",
+    "content consistency",
+    "SEO canonical/sitemap/robots",
+    "performance budgets",
+    "accessibility invariants"
+  ]
+}

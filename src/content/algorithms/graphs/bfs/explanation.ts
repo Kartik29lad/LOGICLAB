@@ -1,0 +1,2 @@
+export const explanation =
+  "Visit the nearest undiscovered neighbors before moving to the next distance level.\\n\\nEnqueue the start node and mark it visited. Dequeue the next node. Inspect its neighbors. Discover and enqueue each unvisited neighbor. Repeat until the queue is empty. The queue preserves discovery order, so nodes are processed in nondecreasing unweighted distance from the start.";

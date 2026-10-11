@@ -1,26 +1,12 @@
+import type { Difficulty } from "../content/schema/content-types";
+
 /**
- * Educational Content Item Contracts
- * Defines schemas for static repository-backed educational content.
+ * Public educational-content contracts. The source content schema is canonical;
+ * this file is the stable contract export used by application boundaries.
  */
-
-export type AlgorithmCategory = "sorting" | "searching" | "graph" | "tree" | "dynamic-programming";
-
-export type DifficultyLevel = "beginner" | "intermediate" | "advanced";
-
-export interface ComplexityProfile {
-  timeBest: string;
-  timeAverage: string;
-  timeWorst: string;
-  spaceComplexity: string;
-  stable?: boolean;
-  inPlace?: boolean;
-}
-
-export interface CodeImplementationSnippet {
-  language: "typescript" | "javascript" | "python" | "java" | "cpp";
-  code: string;
-  lineHighlights?: Record<string, number[]>;
-}
+export * from "../content/schema/content-types";
+export * from "../content/schema/content-validator";
+export * from "../content/schema/content-hash";
 
 export interface ChallengeTestCase<TInput = unknown, TExpected = unknown> {
   id: string;
@@ -35,17 +21,7 @@ export interface ChallengeDefinition {
   algorithmSlug: string;
   title: string;
   description: string;
-  difficulty: DifficultyLevel;
+  difficulty: Difficulty;
   testCases: ChallengeTestCase[];
   hints: string[];
-}
-
-export interface AlgorithmMetadata {
-  slug: string;
-  name: string;
-  category: AlgorithmCategory;
-  difficulty: DifficultyLevel;
-  summary: string;
-  complexity: ComplexityProfile;
-  tags: string[];
 }

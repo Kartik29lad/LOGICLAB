@@ -34,6 +34,9 @@ export class Graph {
   }
 
   public addEdge(source: string, target: string, weight = 1): void {
+    if (weight < 0) {
+      throw new RangeError("Edge weight cannot be negative.");
+    }
     this.addNode(source);
     this.addNode(target);
 

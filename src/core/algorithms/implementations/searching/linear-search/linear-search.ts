@@ -1,3 +1,4 @@
+import type { AlgorithmStepObserver } from "../../../contracts/algorithm-observer";
 import type { AlgorithmMetadata, SearchResult } from "../../../contracts/algorithm.types";
 
 export const LINEAR_SEARCH_METADATA: AlgorithmMetadata = {
@@ -20,12 +21,18 @@ export const LINEAR_SEARCH_METADATA: AlgorithmMetadata = {
 /**
  * Pure Linear Search.
  */
-export function linearSearch(array: readonly number[], target: number): SearchResult {
+export function linearSearch(
+  array: readonly number[],
+  target: number,
+  observer?: AlgorithmStepObserver
+): SearchResult {
   let comparisons = 0;
 
   for (let i = 0; i < array.length; i++) {
     comparisons++;
+    observer?.emit("COMPARE", { index: i, target }, [...array]);
     if (array[i] === target) {
+      observer?.emit("FOUND", { index: i, target }, [...array]);
       return {
         foundIndex: i,
         metrics: { comparisons, steps: i + 1 },
@@ -33,6 +40,7 @@ export function linearSearch(array: readonly number[], target: number): SearchRe
     }
   }
 
+  observer?.emit("NOT_FOUND", { target }, [...array]);
   return {
     foundIndex: -1,
     metrics: { comparisons, steps: array.length },

@@ -26,6 +26,9 @@ export class SeededRandom {
   public nextInt(min: number, max: number): number {
     const minCeil = Math.ceil(min);
     const maxFloor = Math.floor(max);
+    if (!Number.isFinite(min) || !Number.isFinite(max) || minCeil > maxFloor) {
+      throw new RangeError("SeededRandom.nextInt requires a finite range with min <= max.");
+    }
     return Math.floor(this.next() * (maxFloor - minCeil + 1)) + minCeil;
   }
 

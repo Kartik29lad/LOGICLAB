@@ -169,7 +169,7 @@ CREATE TABLE dbo.ContentItems
     RowVersion              ROWVERSION NOT NULL,
 
     CONSTRAINT CK_ContentItems_ContentType
-        CHECK (ContentType IN ('ALGORITHM', 'DATA_STRUCTURE', 'CHALLENGE', 'LEARNING_PATH')),
+        CHECK (ContentType IN ('ALGORITHM', 'DATA_STRUCTURE', 'CHALLENGE', 'LEARNING_PATH', 'CONCEPT_EXPLANATION')),
 
     CONSTRAINT UQ_ContentItems_TypeSlug
         UNIQUE (ContentType, Slug),
@@ -1140,3 +1140,27 @@ CREATE TABLE dbo.UserAchievements
 );
 
 COMMIT TRANSACTION;
+
+/* Phase 8: current content-version invariant */
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE name = 'UX_ContentVersions_Current'
+      AND object_id = OBJECT_ID('dbo.ContentVersions')
+)
+BEGIN
+    CREATE UNIQUE INDEX UX_ContentVersions_Current
+        ON dbo.ContentVersions(ContentItemId)
+        WHERE IsCurrent = 1;
+END;
+
+/* ============================================================
+   PHASE 17 SUPPORTING INDEXES
+   ============================================================ */
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_LearningPathProgress_UserPathStatus' AND object_id=OBJECT_ID('dbo.LearningPathProgress'))
+    CREATE INDEX IX_LearningPathProgress_UserPathStatus ON dbo.LearningPathProgress(UserId, ContentItemId, Status);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_LearningPathItemProgress_ItemStatus' AND object_id=OBJECT_ID('dbo.LearningPathItemProgress'))
+    CREATE INDEX IX_LearningPathItemProgress_ItemStatus ON dbo.LearningPathItemProgress(ItemContentItemId, Status);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_UserActivity_UserTypeDate' AND object_id=OBJECT_ID('dbo.UserActivity'))
+    CREATE INDEX IX_UserActivity_UserTypeDate ON dbo.UserActivity(UserId, ActivityType, ActivityDate);

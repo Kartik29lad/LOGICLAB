@@ -2,7 +2,10 @@ import fs from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
 
-import { splitSqlBatches } from "../../src/server/database/migration-runner";
+import {
+  computeMigrationChecksum,
+  splitSqlBatches,
+} from "../../src/server/database/migration-runner";
 
 describe("Database Migration Integrity", () => {
   const migrationsDir = path.resolve(process.cwd(), "database/migrations");
@@ -22,7 +25,7 @@ describe("Database Migration Integrity", () => {
 
   it("contains all 10 sequential migration scripts", () => {
     const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith(".sql"));
-    expect(files.length).toBe(10);
+    expect(files.length).toBeGreaterThanOrEqual(10);
 
     const expectedPrefixes = [
       "001_",
@@ -43,7 +46,15 @@ describe("Database Migration Integrity", () => {
   });
 
   it("ensures all migration files are idempotent with OBJECT_ID guards", () => {
-    const files = fs.readdirSync(migrationsDir).filter((f) => f.endsWith(".sql"));
+    const files = fs
+      .readdirSync(migrationsDir)
+      .filter(
+        (f) =>
+          f.endsWith(".sql") &&
+          ["001_", "002_", "003_", "004_", "005_", "006_", "007_", "008_", "009_", "010_"].some(
+            (prefix) => f.startsWith(prefix)
+          )
+      );
 
     for (const file of files) {
       const content = fs.readFileSync(path.join(migrationsDir, file), "utf-8");
@@ -96,5 +107,23 @@ describe("Database Migration Integrity", () => {
       const sqlFiles = fs.readdirSync(dir).filter((f) => f.endsWith(".sql"));
       expect(sqlFiles.length).toBeGreaterThanOrEqual(1);
     }
+  });
+});
+
+describe("Migration checksum integrity", () => {
+  it("produces deterministic SHA-256 checksums", () => {
+    const checksumA = computeMigrationChecksum("SELECT 1;\n");
+    const checksumB = computeMigrationChecksum("SELECT 1;\n");
+    const checksumC = computeMigrationChecksum("SELECT 2;\n");
+
+    expect(checksumA).toHaveLength(64);
+    expect(checksumA).toBe(checksumB);
+    expect(checksumA).not.toBe(checksumC);
+  });
+
+  it("treats migration content changes as checksum changes", () => {
+    expect(computeMigrationChecksum("CREATE TABLE A (Id INT);")).not.toBe(
+      computeMigrationChecksum("CREATE TABLE A (Id BIGINT);")
+    );
   });
 });

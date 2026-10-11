@@ -64,6 +64,23 @@ describe("Phase 5: Graph Models & Algorithms", () => {
     expect(result.getPathTo("D")).toEqual(["A", "C", "B", "D"]);
   });
 
+  it("handles disconnected and unreachable graphs", () => {
+    const g = new Graph(false);
+    g.addNode("A");
+    g.addNode("B");
+    expect(breadthFirstSearch(g, "A").visitedOrder).toEqual(["A"]);
+    expect(dijkstra(g, "A").getPathTo("B")).toEqual([]);
+  });
+
+  it("supports self-loops and duplicate edges deterministically", () => {
+    const g = new Graph(true);
+    g.addEdge("A", "A", 0);
+    g.addEdge("A", "B", 2);
+    g.addEdge("A", "B", 1);
+    expect(g.getNeighbors("A")).toHaveLength(3);
+    expect(dijkstra(g, "A").distances["B"]).toBe(1);
+  });
+
   it("finds optimal path using A* search", () => {
     const g = new Graph(false);
     g.addNode("start", "Start", 0, 0);

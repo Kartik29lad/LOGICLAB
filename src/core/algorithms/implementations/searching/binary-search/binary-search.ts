@@ -1,3 +1,4 @@
+import type { AlgorithmStepObserver } from "../../../contracts/algorithm-observer";
 import type { AlgorithmMetadata, SearchResult } from "../../../contracts/algorithm.types";
 
 export const BINARY_SEARCH_METADATA: AlgorithmMetadata = {
@@ -20,7 +21,11 @@ export const BINARY_SEARCH_METADATA: AlgorithmMetadata = {
 /**
  * Pure Binary Search on sorted numbers.
  */
-export function binarySearch(sortedArray: readonly number[], target: number): SearchResult {
+export function binarySearch(
+  sortedArray: readonly number[],
+  target: number,
+  observer?: AlgorithmStepObserver
+): SearchResult {
   let low = 0;
   let high = sortedArray.length - 1;
   let comparisons = 0;
@@ -32,7 +37,9 @@ export function binarySearch(sortedArray: readonly number[], target: number): Se
     const midVal = sortedArray[mid]!;
 
     comparisons++;
+    observer?.emit("COMPARE", { low, high, mid, target }, [...sortedArray]);
     if (midVal === target) {
+      observer?.emit("FOUND", { index: mid, target }, [...sortedArray]);
       return {
         foundIndex: mid,
         metrics: { comparisons, steps },
@@ -46,6 +53,7 @@ export function binarySearch(sortedArray: readonly number[], target: number): Se
     }
   }
 
+  observer?.emit("NOT_FOUND", { target }, [...sortedArray]);
   return {
     foundIndex: -1,
     metrics: { comparisons, steps },

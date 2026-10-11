@@ -1,0 +1,2 @@
+export const explanation =
+  "Maintain parent-child priority so the root is the minimum or maximum element.\\n\\nRepresent the complete tree in an array. Insert at the end. Bubble the value upward when needed. Remove the root by replacing it with the last value. Sift the replacement downward. The heap property lets root access be constant time while insert/remove restore order in logarithmic time.";

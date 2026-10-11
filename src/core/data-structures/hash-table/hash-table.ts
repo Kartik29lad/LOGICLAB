@@ -12,6 +12,9 @@ export class HashTable<K = string, V = unknown> {
   private count = 0;
 
   constructor(initialCapacity = 16) {
+    if (!Number.isInteger(initialCapacity) || initialCapacity < 1) {
+      throw new RangeError("HashTable capacity must be a positive integer.");
+    }
     this.capacity = initialCapacity;
     this.buckets = Array.from({ length: initialCapacity }, () => []);
   }
@@ -53,7 +56,8 @@ export class HashTable<K = string, V = unknown> {
   }
 
   public has(key: K): boolean {
-    return this.get(key) !== undefined;
+    const idx = this.hash(key);
+    return this.buckets[idx]!.some((node) => node.key === key);
   }
 
   public delete(key: K): boolean {

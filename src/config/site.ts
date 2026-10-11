@@ -11,5 +11,5 @@ export const siteConfig: SiteConfig = {
   tagline: "Explore. Visualize. Understand.",
   description: "Interactive algorithm and data-structure learning laboratory.",
   url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  phase: "Phase 1 — Repository and Development Foundation",
+  phase: "Phase 25 — CI/CD and Staging",
 };

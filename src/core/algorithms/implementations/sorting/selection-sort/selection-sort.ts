@@ -1,3 +1,4 @@
+import type { AlgorithmStepObserver } from "../../../contracts/algorithm-observer";
 import type { AlgorithmMetadata, SortResult } from "../../../contracts/algorithm.types";
 
 export const SELECTION_SORT_METADATA: AlgorithmMetadata = {
@@ -22,7 +23,10 @@ export const SELECTION_SORT_METADATA: AlgorithmMetadata = {
 /**
  * Pure Selection Sort.
  */
-export function selectionSort(input: readonly number[]): SortResult<number> {
+export function selectionSort(
+  input: readonly number[],
+  observer?: AlgorithmStepObserver
+): SortResult<number> {
   const array = [...input];
   let comparisons = 0;
   let swaps = 0;
@@ -30,9 +34,11 @@ export function selectionSort(input: readonly number[]): SortResult<number> {
 
   for (let i = 0; i < n - 1; i++) {
     let minIndex = i;
+    observer?.emit("SELECT", { index: i }, [...array]);
 
     for (let j = i + 1; j < n; j++) {
       comparisons++;
+      observer?.emit("COMPARE", { indexes: [j, minIndex] }, [...array]);
       if (array[j]! < array[minIndex]!) {
         minIndex = j;
       }
@@ -43,6 +49,7 @@ export function selectionSort(input: readonly number[]): SortResult<number> {
       array[i] = array[minIndex]!;
       array[minIndex] = temp;
       swaps++;
+      observer?.emit("SWAP", { indexes: [i, minIndex] }, [...array]);
     }
   }
 

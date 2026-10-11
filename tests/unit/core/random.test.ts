@@ -23,6 +23,12 @@ describe("Phase 5: Seeded PRNG & Input Generation", () => {
     }
   });
 
+  it("rejects invalid generator ranges", () => {
+    expect(() => ArrayGenerator.random(-1)).toThrow(RangeError);
+    expect(() => ArrayGenerator.nearlySorted(0, 1)).toThrow(RangeError);
+    expect(() => ArrayGenerator.withDuplicates(5, 0)).toThrow(RangeError);
+  });
+
   it("generates arrays matching requested presets", () => {
     const randomArr = ArrayGenerator.random(10, 5, 50, 123);
     expect(randomArr).toHaveLength(10);

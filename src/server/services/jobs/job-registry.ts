@@ -33,4 +33,18 @@ export const MAINTENANCE_JOBS: Record<string, MaintenanceJob> = {
     enabled: true,
     timeoutMs: 180_000,
   },
+  API_RATE_LIMIT_RETENTION: {
+    name: "api-rate-limit-retention",
+    description: "Removes expired distributed API rate-limit buckets",
+    cronSchedule: "45 3 * * *",
+    enabled: true,
+    timeoutMs: 60_000,
+  },
+  IDEMPOTENCY_RETENTION: {
+    name: "idempotency-retention",
+    description: "Removes completed idempotency records after the retry safety window",
+    cronSchedule: "30 3 * * *",
+    enabled: true,
+    timeoutMs: 60_000,
+  },
 };

@@ -1,3 +1,4 @@
+import type { AlgorithmStepObserver } from "../../../contracts/algorithm-observer";
 import type { AlgorithmMetadata, SortResult } from "../../../contracts/algorithm.types";
 
 export const BUBBLE_SORT_METADATA: AlgorithmMetadata = {
@@ -22,7 +23,10 @@ export const BUBBLE_SORT_METADATA: AlgorithmMetadata = {
 /**
  * Pure, framework-independent Bubble Sort with early-termination optimization.
  */
-export function bubbleSort(input: readonly number[]): SortResult<number> {
+export function bubbleSort(
+  input: readonly number[],
+  observer?: AlgorithmStepObserver
+): SortResult<number> {
   const array = [...input];
   let comparisons = 0;
   let swaps = 0;
@@ -33,11 +37,13 @@ export function bubbleSort(input: readonly number[]): SortResult<number> {
 
     for (let j = 0; j < n - i - 1; j++) {
       comparisons++;
+      observer?.emit("COMPARE", { indexes: [j, j + 1] }, [...array]);
       if (array[j]! > array[j + 1]!) {
         const temp = array[j]!;
         array[j] = array[j + 1]!;
         array[j + 1] = temp;
         swaps++;
+        observer?.emit("SWAP", { indexes: [j, j + 1] }, [...array]);
         swapped = true;
       }
     }
