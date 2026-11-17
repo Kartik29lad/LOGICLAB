@@ -1,10 +1,9 @@
 import type {
+  AlgorithmStepObserver,
   CanonicalExecutionTrace,
   ExecutionTraceStep,
   TraceMetricSnapshot,
 } from "@/contracts/events/trace-events";
-import type { AlgorithmStepObserver } from "@/core/algorithms/contracts/algorithm-observer";
-import { BinarySearchTree, BSTNode } from "@/core/data-structures/tree/binary-search-tree";
 
 export type TreeOperation = "insert" | "search" | "delete";
 export interface TreeExperiment {
@@ -19,6 +18,18 @@ export const DEFAULT_TREE_EXPERIMENT: TreeExperiment = {
 };
 export const TREE_LIMIT = 30;
 
+interface TreeNodeShape {
+  value: number;
+  left: TreeNodeShape | null;
+  right: TreeNodeShape | null;
+}
+
+interface TreeInstance {
+  root: TreeNodeShape | null;
+  insert(value: number): void;
+  inOrder(): number[];
+}
+
 export function cloneTreeExperiment(input: TreeExperiment): TreeExperiment {
   return { values: [...input.values], operation: input.operation, target: input.target };
 }
@@ -26,6 +37,7 @@ export function cloneTreeExperiment(input: TreeExperiment): TreeExperiment {
 export async function createTreeTrace(
   experiment: TreeExperiment = DEFAULT_TREE_EXPERIMENT
 ): Promise<CanonicalExecutionTrace<unknown, unknown, unknown>> {
+  const { BinarySearchTree } = await import("@/core/data-structures/tree/binary-search-tree");
   const tree = new BinarySearchTree();
   const events: Array<{
     type: Parameters<AlgorithmStepObserver["emit"]>[0];
@@ -37,13 +49,12 @@ export async function createTreeTrace(
   };
   for (const value of experiment.values.slice(0, TREE_LIMIT)) tree.insert(value);
   const initial = snapshotTree(tree.root);
-  // Rebuild through traced operations so the trace begins from the actual input tree.
   const tracedTree = new BinarySearchTree();
   for (const value of experiment.values.slice(0, TREE_LIMIT)) tracedTree.insert(value);
   if (experiment.operation === "insert") insertWithTrace(tracedTree, experiment.target, observer);
   else if (experiment.operation === "search")
     searchWithTrace(tracedTree.root, experiment.target, observer);
-  else deleteWithTrace(tracedTree, experiment.target, observer);
+  else deleteWithTrace(tracedTree, experiment.target, () => new BinarySearchTree(), observer);
   const steps: ExecutionTraceStep<unknown>[] = [];
   let state: unknown = initial;
   const metrics = emptyMetrics();
@@ -77,17 +88,13 @@ export async function createTreeTrace(
   };
 }
 
-function insertWithTrace(
-  tree: BinarySearchTree,
-  value: number,
-  observer: AlgorithmStepObserver
-): void {
+function insertWithTrace(tree: TreeInstance, value: number, observer: AlgorithmStepObserver): void {
   if (!tree.root) {
     tree.insert(value);
     observer.emit("INSERT", { value, relation: "root" }, snapshotTree(tree.root));
     return;
   }
-  let current: BSTNode | null = tree.root;
+  let current: TreeNodeShape | null = tree.root;
   while (current) {
     observer.emit("COMPARE", { current: current.value, target: value }, snapshotTree(tree.root));
     if (value === current.value) return;
@@ -116,8 +123,9 @@ function insertWithTrace(
     }
   }
 }
+
 function searchWithTrace(
-  root: BSTNode | null,
+  root: TreeNodeShape | null,
   target: number,
   observer: AlgorithmStepObserver
 ): void {
@@ -136,9 +144,11 @@ function searchWithTrace(
   }
   observer.emit("NOT_FOUND", { target }, snapshotTree(root));
 }
+
 function deleteWithTrace(
-  tree: BinarySearchTree,
+  tree: TreeInstance,
   target: number,
+  createTree: () => TreeInstance,
   observer: AlgorithmStepObserver
 ): void {
   const values = tree.inOrder();
@@ -157,17 +167,17 @@ function deleteWithTrace(
     return;
   }
   const replacementValues = values.filter((value) => value !== target);
-  const rebuilt = new BinarySearchTree();
+  const rebuilt = createTree();
   replacementValues.forEach((value) => rebuilt.insert(value));
   tree.root = rebuilt.root;
-  observer.emit("REMOVE", { target }, snapshotTree(tree.root));
+  observer.emit("REMOVE", { target, value: target }, snapshotTree(tree.root));
 }
-function snapshotTree(root: BSTNode | null, current?: number, status?: string): unknown {
-  let counter = 0;
-  const walk = (node: BSTNode | null): unknown => {
+
+function snapshotTree(root: TreeNodeShape | null, current?: number, status?: string): unknown {
+  const walk = (node: TreeNodeShape | null): unknown => {
     if (!node) return null;
     return {
-      id: `tree-${counter++}`,
+      id: `tree-node-${node.value}`,
       value: node.value,
       left: walk(node.left),
       right: walk(node.right),
@@ -176,9 +186,11 @@ function snapshotTree(root: BSTNode | null, current?: number, status?: string): 
   };
   return { root: walk(root), current, status };
 }
+
 function emptyMetrics(): TraceMetricSnapshot {
   return { comparisons: 0, swaps: 0, reads: 0, writes: 0, visits: 0, iterations: 0, elapsedMs: 0 };
 }
+
 function applyMetric(metrics: TraceMetricSnapshot, type: string): void {
   if (type === "COMPARE") metrics.comparisons += 1;
   if (type === "VISIT") metrics.visits += 1;

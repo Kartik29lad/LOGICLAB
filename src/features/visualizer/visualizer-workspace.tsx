@@ -3,28 +3,27 @@
 import { useEffect, useMemo } from "react";
 
 import type { VisualizationState } from "@/contracts/events/visualization-state";
-import { resolveAnimationIntent } from "@/core/visualization/motion";
-import type { PlaybackStatus } from "@/core/visualization/playback/playback-controller";
+import type { PlaybackStatus, VisualizerRuntimePorts } from "@/contracts/visualization";
 import { getDiscoveryItem } from "@/content/discovery";
 import { Disclosure } from "@/components/ui/disclosure";
 import { LabStatePanel } from "@/components/ui/lab-state";
 
 import { describeExecutionStep } from "./accessibility";
-import { ArrayInputPanel } from "./array-input-panel";
 import { buildCompletionSummary } from "./completion-experience";
 import { CompletionExperienceCard } from "./completion-experience-card";
-import { DataStructureInputPanel } from "./data-structure-input-panel";
 import { ExecutionTimeline } from "./execution-timeline";
-import { GraphEditorPanel } from "./graph-editor-panel";
 import { inspectStep } from "./learning-inspector";
 import { LearningPanels } from "./learning-panels";
+import { MotionCoordinatorProvider } from "./motion/motion-context";
+import { useReducedMotion } from "./motion/reduced-motion";
 import { PredictionPanel } from "./prediction-panel";
 import { PresentationMode } from "./presentation-mode";
 import { traceStepToVisualization } from "./render-state";
 import { renderVisualization } from "./renderer-registry";
-import { TreeExperimentPanel } from "./tree-experiment-panel";
 import { useVisualizerExecution } from "./use-visualizer-execution";
 import { useVisualizerShortcuts } from "./use-visualizer-shortcuts";
+import { VisualizerInputSection } from "./visualizer-input-section";
+import { VisualizerMetricsBar } from "./visualizer-metrics-bar";
 import { VisualizerModeToggle } from "./visualizer-mode-toggle";
 import { VisualizerPlaybackBar } from "./visualizer-playback-bar";
 import { getEducationalCue, getVisualizerPolishProfile } from "./visualizer-polish";
@@ -38,12 +37,14 @@ interface VisualizerWorkspaceProps {
   slug: string;
   title: string;
   visualizationType: string;
+  runtime?: VisualizerRuntimePorts;
 }
 
 export function VisualizerWorkspace({
   slug,
   title,
   visualizationType,
+  runtime,
 }: VisualizerWorkspaceProps): React.JSX.Element {
   const {
     arrayInput,
@@ -72,6 +73,9 @@ export function VisualizerWorkspace({
   const {
     trace,
     step,
+    stepGeneration,
+    transitionMode,
+    coordinator,
     status,
     speed,
     inputRevision,
@@ -103,6 +107,7 @@ export function VisualizerWorkspace({
     setPredictionMode,
     setFocusMode,
     setPresentationMode,
+    createPlaybackController: runtime?.createPlaybackController,
   });
 
   const visualization = useMemo<VisualizationState | null>(
@@ -126,7 +131,9 @@ export function VisualizerWorkspace({
   );
 
   const animationIntent =
-    trace && trace.steps[step] ? resolveAnimationIntent(trace.steps[step].event) : null;
+    trace && trace.steps[step] && runtime?.resolveAnimationIntent
+      ? runtime.resolveAnimationIntent(trace.steps[step].event, visualization?.visualization)
+      : null;
 
   const isArrayVisualizer = visualizationType === "array";
   const isGraphVisualizer = visualizationType === "graph";
@@ -141,23 +148,34 @@ export function VisualizerWorkspace({
     currentEvent ?? "START",
     trace?.steps[step]?.event.description
   );
-  const reducedMotion =
-    typeof document !== "undefined" && document.documentElement.dataset.reducedMotion === "true";
+  const reducedMotion = useReducedMotion();
+  useEffect(() => {
+    coordinator.setReducedMotion(reducedMotion);
+  }, [coordinator, reducedMotion]);
   const polish = getVisualizerPolishProfile(focusMode, reducedMotion);
   const educationalCue = getEducationalCue(currentEvent);
   const completion = trace && status === "COMPLETED" ? buildCompletionSummary(trace) : null;
   const visibility = getFocusVisibility(focusMode);
 
   const renderer = visualization ? (
-    renderVisualization(visualization.visualization, {
-      speed,
-      reducedMotion,
-      animationIntent,
-      resetKey: `${visualization.executionTraceStep}`,
-      graphEditor: isGraphVisualizer
-        ? { enabled: status !== "PLAYING", onNodeMove: handleNodeMove }
-        : undefined,
-    })
+    <MotionCoordinatorProvider
+      coordinator={coordinator}
+      generation={stepGeneration}
+      transitionMode={transitionMode}
+      speed={speed}
+      reducedMotion={reducedMotion}
+    >
+      {renderVisualization(visualization.visualization, {
+        speed,
+        reducedMotion,
+        animationIntent,
+        algorithmSlug: slug,
+        resetKey: `${visualization.executionTraceStep}`,
+        graphEditor: isGraphVisualizer
+          ? { enabled: status !== "PLAYING" && status !== "ANIMATING", onNodeMove: handleNodeMove }
+          : undefined,
+      })}
+    </MotionCoordinatorProvider>
   ) : (
     <LabStatePanel
       state={inputRevision > 0 ? "loading" : "ready"}
@@ -197,51 +215,30 @@ export function VisualizerWorkspace({
       aria-label={accessibility.label}
       role={accessibility.role}
     >
-      {visibility.showInputs && isArrayVisualizer ? (
-        <ArrayInputPanel
-          key={slug}
-          slug={slug}
-          disabled={status === "PLAYING"}
-          onApply={applyArrayInput}
-        />
-      ) : null}
-      {visibility.showInputs && isGraphVisualizer ? (
-        <GraphEditorPanel
-          key={slug}
-          slug={slug}
-          disabled={status === "PLAYING"}
-          graph={graphExperiment}
-          onApply={applyGraphExperiment}
-        />
-      ) : null}
-      {visibility.showInputs && isTreeVisualizer ? (
-        <TreeExperimentPanel
-          key={slug}
-          value={treeExperiment}
-          disabled={status === "PLAYING"}
-          onApply={handleTreeApply}
-        />
-      ) : null}
-      {visibility.showInputs && isLinearStructure ? (
-        <DataStructureInputPanel
-          key={slug}
-          slug={slug as "stack" | "queue" | "linked-list" | "hash-table" | "heap"}
-          disabled={status === "PLAYING"}
-          onApply={(values) => {
-            setLinearInput(values);
-            applyArrayInput(values);
-          }}
-        />
-      ) : null}
-      {graphError ? (
-        <div className="visualizer-error-banner" role="alert">
-          {graphError}
-        </div>
-      ) : null}
-      <div className="visualizer-stage-wrapper">
+      <VisualizerInputSection
+        slug={slug}
+        showInputs={visibility.showInputs}
+        disabled={status === "PLAYING" || status === "ANIMATING"}
+        isArrayVisualizer={isArrayVisualizer}
+        isGraphVisualizer={isGraphVisualizer}
+        isTreeVisualizer={isTreeVisualizer}
+        isLinearStructure={isLinearStructure}
+        graphExperiment={graphExperiment}
+        treeExperiment={treeExperiment}
+        graphError={graphError}
+        onApplyArray={applyArrayInput}
+        onApplyGraph={applyGraphExperiment}
+        onApplyTree={handleTreeApply}
+        onApplyLinear={(values) => {
+          setLinearInput(values);
+          applyArrayInput(values);
+        }}
+      />
+      <div className="visualizer-stage">
         {educationalCue ? (
           <div
-            className={`visualizer-stage-cue visualizer-stage-cue--${educationalCue.state}`}
+            className="visualizer-educational-cue"
+            data-state={educationalCue.state}
             role="status"
           >
             <strong>{educationalCue.title}</strong>
@@ -295,48 +292,8 @@ export function VisualizerWorkspace({
           onSeek={(nextStep) => controllerRef.current?.setStep(nextStep)}
         />
       ) : null}
-      <label className="sr-only" htmlFor="visualizer-step-slider">
-        Execution step
-      </label>
-      <input
-        id="visualizer-step-slider"
-        className="visualizer-slider"
-        type="range"
-        min="0"
-        max={Math.max(0, (trace?.steps.length ?? 1) - 1)}
-        value={step}
-        onChange={(e) => controllerRef.current?.setStep(Number(e.target.value))}
-        aria-label="Execution step"
-      />
       {visibility.showMetrics ? (
-        <div className="visualizer-meta">
-          <div>
-            <strong>Step</strong>
-            <span>{step + 1}</span>
-          </div>
-          <div>
-            <strong>Comparisons</strong>
-            <span>{visualization?.metrics.comparisons ?? 0}</span>
-          </div>
-          <div>
-            <strong>Swaps</strong>
-            <span>{visualization?.metrics.swaps ?? 0}</span>
-          </div>
-          <div>
-            <strong>Writes</strong>
-            <span>{visualization?.metrics.writes ?? 0}</span>
-          </div>
-          <div>
-            <strong>Visits</strong>
-            <span>{visualization?.metrics.visits ?? 0}</span>
-          </div>
-        </div>
-      ) : null}
-      {visibility.showMetrics ? (
-        <p className="visualizer-note">
-          Run again uses the same deterministic trace model. Playback speed changes timing only; it
-          never changes algorithm state.
-        </p>
+        <VisualizerMetricsBar step={step} metrics={visualization?.metrics} />
       ) : null}
       {visibility.showInspector && inspection ? (
         <Disclosure

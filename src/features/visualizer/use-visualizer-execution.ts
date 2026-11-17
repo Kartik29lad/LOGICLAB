@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { CanonicalExecutionTrace } from "@/contracts/events/trace-events";
-import {
-  PlaybackController,
-  type PlaybackStatus,
-} from "@/core/visualization/playback/playback-controller";
+import type {
+  PlaybackControllerFactory,
+  PlaybackPort,
+  PlaybackStatus,
+} from "@/contracts/visualization";
 
 import { createDemoTrace } from "./demo-traces";
 import {
@@ -16,6 +17,11 @@ import {
   type GraphExperiment,
 } from "./graph-editor";
 import { guardPlaybackInteraction } from "./interaction-safety";
+import { shouldBypassMotionForLargeTrace } from "./large-trace-strategy";
+import {
+  StepPresentationCoordinator,
+  type StepCommitMeta,
+} from "./motion/step-presentation-coordinator";
 import { validateTraceBudget } from "./resource-limits";
 import {
   cloneTreeExperiment,
@@ -40,6 +46,7 @@ interface UseVisualizerExecutionOptions {
   setPredictionMode: (value: boolean) => void;
   setFocusMode: (value: boolean) => void;
   setPresentationMode: (value: boolean) => void;
+  createPlaybackController?: PlaybackControllerFactory;
 }
 
 export function useVisualizerExecution({
@@ -58,11 +65,16 @@ export function useVisualizerExecution({
   setPredictionMode,
   setFocusMode,
   setPresentationMode,
+  createPlaybackController,
 }: UseVisualizerExecutionOptions) {
   const [trace, setTrace] = useState<CanonicalExecutionTrace<unknown, unknown, unknown> | null>(
     null
   );
-  const [step, setStep] = useState(0);
+  const [stepState, setStepState] = useState<StepCommitMeta>({
+    stepIndex: 0,
+    generation: 0,
+    mode: "settle",
+  });
   const [status, setStatus] = useState<PlaybackStatus>("READY");
   const [speed, setSpeed] = useState(1);
   const [inputRevision, setInputRevision] = useState(0);
@@ -71,15 +83,27 @@ export function useVisualizerExecution({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [graphError, setGraphError] = useState<string | null>(null);
 
-  const controllerRef = useRef<PlaybackController<unknown> | null>(null);
+  const controllerRef = useRef<PlaybackPort | null>(null);
+  const coordinatorRef = useRef<StepPresentationCoordinator | null>(null);
+  if (!coordinatorRef.current) {
+    coordinatorRef.current = new StepPresentationCoordinator();
+  }
   const traceRequestRef = useRef(0);
   const speedRef = useRef(speed);
   speedRef.current = speed;
 
   useEffect(() => {
+    const coordinator = coordinatorRef.current;
+    return () => {
+      coordinator?.dispose();
+    };
+  }, []);
+
+  useEffect(() => {
     const requestId = ++traceRequestRef.current;
+    coordinatorRef.current?.cancelActive();
     setTrace(null);
-    setStep(0);
+    setStepState((prev) => ({ stepIndex: 0, generation: prev.generation + 1, mode: "settle" }));
     setStatus("READY");
     setArrayInput([]);
     setSearchTarget(undefined);
@@ -118,8 +142,9 @@ export function useVisualizerExecution({
     setArrayInput(values);
     setSearchTarget(target);
     setInputRevision((revision) => revision + 1);
+    coordinatorRef.current?.cancelActive();
     setTrace(null);
-    setStep(0);
+    setStepState((prev) => ({ stepIndex: 0, generation: prev.generation + 1, mode: "settle" }));
     setStatus("READY");
   };
 
@@ -132,8 +157,9 @@ export function useVisualizerExecution({
     traceRequestRef.current += 1;
     setGraphExperiment(cloneGraphExperiment(nextGraph));
     setGraphError(null);
+    coordinatorRef.current?.cancelActive();
     setTrace(null);
-    setStep(0);
+    setStepState((prev) => ({ stepIndex: 0, generation: prev.generation + 1, mode: "settle" }));
     setStatus("READY");
     setInputRevision((revision) => revision + 1);
   };
@@ -141,8 +167,9 @@ export function useVisualizerExecution({
   const handleTreeApply = (next: TreeExperiment): void => {
     traceRequestRef.current += 1;
     setTreeExperiment(cloneTreeExperiment(next));
+    coordinatorRef.current?.cancelActive();
     setTrace(null);
-    setStep(0);
+    setStepState((prev) => ({ stepIndex: 0, generation: prev.generation + 1, mode: "settle" }));
     setStatus("READY");
     setInputRevision((revision) => revision + 1);
   };
@@ -181,18 +208,45 @@ export function useVisualizerExecution({
   }, [arrayInput, graphExperiment, inputRevision, linearInput, searchTarget, slug, treeExperiment]);
 
   useEffect(() => {
-    if (!trace) return;
-    const controller = new PlaybackController({ trace, onStep: setStep, onStatus: setStatus });
+    if (!trace || !createPlaybackController || !coordinatorRef.current) return;
+    const coordinator = coordinatorRef.current;
+    const inputCount = Array.isArray(trace.input) ? trace.input.length : 0;
+    const largeTraceInstant = shouldBypassMotionForLargeTrace(trace.steps.length, inputCount);
+
+    const controller = createPlaybackController({
+      trace,
+      stepDurationMs: 650,
+      postStepDwellMs: 140,
+      onStep: (stepIndex, context) => {
+        const mode = largeTraceInstant ? "settle" : (context?.mode ?? "settle");
+        return coordinator.beginStepTransition(
+          {
+            stepIndex,
+            mode,
+            generation: context?.generation ?? 0,
+          },
+          setStepState
+        );
+      },
+      onStatus: setStatus,
+      onAnimationPause: () => coordinator.pauseActive(),
+      onAnimationResume: () => coordinator.resumeActive(),
+      onAnimationCancel: () => coordinator.cancelActive(),
+      onSpeedChange: (nextSpeed) => coordinator.setSpeed(nextSpeed),
+    });
     controller.setSpeed(speedRef.current);
+    coordinator.setSpeed(speedRef.current);
     controllerRef.current = controller;
     return () => {
+      coordinator.cancelActive();
       controller.dispose();
       controllerRef.current = null;
     };
-  }, [trace]);
+  }, [createPlaybackController, trace]);
 
   useEffect(() => {
     controllerRef.current?.setSpeed(speed);
+    coordinatorRef.current?.setSpeed(speed);
   }, [speed]);
 
   const run = useCallback(
@@ -234,7 +288,10 @@ export function useVisualizerExecution({
 
   return {
     trace,
-    step,
+    step: stepState.stepIndex,
+    stepGeneration: stepState.generation,
+    transitionMode: stepState.mode,
+    coordinator: coordinatorRef.current,
     status,
     speed,
     inputRevision,

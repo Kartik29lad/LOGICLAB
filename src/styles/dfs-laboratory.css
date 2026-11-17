@@ -81,7 +81,9 @@
 .viz-graph-node[data-state="discovered"] .viz-graph-node-circle {
   stroke-dasharray: 4 3;
 }
-.viz-graph-node[data-state="current"] .viz-graph-node-halo {
+.viz-graph-lab:not([data-motion-owned="gsap"])
+  .viz-graph-node[data-state="current"]
+  .viz-graph-node-halo {
   animation: logiclab-dfs-pulse 900ms ease-in-out infinite alternate;
 }
 @keyframes logiclab-dfs-pulse {

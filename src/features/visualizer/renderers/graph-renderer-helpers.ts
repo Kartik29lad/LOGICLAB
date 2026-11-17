@@ -22,6 +22,50 @@ export function layoutNodes(
   }));
 }
 
+export function getGraphEdgeId(
+  edge: { id?: string; source: string; target: string },
+  occurrence = 0
+): string {
+  if (edge.id) return edge.id;
+  return occurrence === 0
+    ? `edge:${edge.source}->${edge.target}`
+    : `edge:${edge.source}->${edge.target}#${occurrence}`;
+}
+
+export interface GraphEdgeGeometry {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  length: number;
+  pathData: string;
+}
+
+export function computeEdgeGeometry(
+  source: GraphPoint,
+  target: GraphPoint,
+  nodeRadius = 26
+): GraphEdgeGeometry {
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+  const rawLength = Math.max(Math.hypot(dx, dy), 1);
+  const offsetX = (dx / rawLength) * nodeRadius;
+  const offsetY = (dy / rawLength) * nodeRadius;
+  const x1 = source.x + offsetX;
+  const y1 = source.y + offsetY;
+  const x2 = target.x - offsetX;
+  const y2 = target.y - offsetY;
+  const length = Math.max(Math.hypot(x2 - x1, y2 - y1), 1);
+  return {
+    x1,
+    y1,
+    x2,
+    y2,
+    length,
+    pathData: `M ${x1} ${y1} L ${x2} ${y2}`,
+  };
+}
+
 export function describeGraphState(state: GraphVisualState): string {
   if (state.currentNode) return `Current node: ${state.currentNode}`;
   if (state.path.length > 0) return `Path: ${state.path.join(" → ")}`;

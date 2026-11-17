@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  PLAYBACK_SPEEDS,
-  type PlaybackStatus,
-} from "@/core/visualization/playback/playback-controller";
+import { PLAYBACK_SPEEDS, type PlaybackStatus } from "@/contracts/visualization";
 import {
   PauseIcon,
   PlayIcon,
@@ -36,6 +33,8 @@ export function VisualizerPlaybackBar({
   onRun,
   onSpeedChange,
 }: VisualizerPlaybackBarProps): React.JSX.Element {
+  const isPlayingOrAnimating = status === "PLAYING" || status === "ANIMATING";
+
   return (
     <>
       <div
@@ -55,11 +54,11 @@ export function VisualizerPlaybackBar({
         </button>
         <button
           type="button"
-          onClick={() => (status === "PLAYING" ? onRun("pause") : onRun("play"))}
-          className={`visualizer-controls__btn visualizer-controls__btn--play ${status === "PLAYING" ? "is-playing" : ""}`}
-          aria-label={status === "PLAYING" ? "Pause execution" : "Play execution"}
+          onClick={() => (isPlayingOrAnimating ? onRun("pause") : onRun("play"))}
+          className={`visualizer-controls__btn visualizer-controls__btn--play ${isPlayingOrAnimating ? "is-playing" : ""}`}
+          aria-label={isPlayingOrAnimating ? "Pause execution" : "Play execution"}
         >
-          {status === "PLAYING" ? (
+          {isPlayingOrAnimating ? (
             <>
               <PauseIcon aria-hidden="true" />
               <span>Pause</span>

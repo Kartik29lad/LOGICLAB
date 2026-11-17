@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 
 import { canonicalMetadata } from "@/lib/seo";
 import { getDiscoveryContent, getDiscoveryItem } from "@/content/discovery";
-import { VisualizerWorkspace } from "@/features/visualizer/visualizer-workspace";
+
+import { VisualizerClientShell } from "./visualizer-client-shell";
 
 export async function generateMetadata({
   params,
@@ -55,7 +56,7 @@ export default async function AlgorithmVisualizerPage({
           </p>
         </div>
       </header>
-      <VisualizerWorkspace
+      <VisualizerClientShell
         slug={algorithmSlug}
         title={item.metadata.title}
         visualizationType={item.metadata.visualizationType}

@@ -188,7 +188,8 @@
 }
 .button--primary {
   background: var(--color-primary);
-  color: white;
+  color: #06131f;
+  font-weight: 750;
 }
 .button--primary:hover {
   background: var(--color-primary-hover);

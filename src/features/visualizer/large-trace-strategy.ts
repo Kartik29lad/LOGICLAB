@@ -29,3 +29,15 @@ export function getTraceWindow(
 export function shouldVirtualizeTrace(stepCount: number): boolean {
   return stepCount > VISUALIZER_RESOURCE_LIMITS.timelineMarkers;
 }
+
+export const LARGE_TRACE_MOTION_LIMITS = {
+  maxAnimatedSteps: 250,
+  maxAnimatedInputSize: 60,
+} as const;
+
+export function shouldBypassMotionForLargeTrace(stepCount: number, inputSize = 0): boolean {
+  return (
+    stepCount > LARGE_TRACE_MOTION_LIMITS.maxAnimatedSteps ||
+    inputSize > LARGE_TRACE_MOTION_LIMITS.maxAnimatedInputSize
+  );
+}

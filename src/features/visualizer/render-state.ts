@@ -1,6 +1,7 @@
 import type { CanonicalExecutionTrace, ExecutionTraceStep } from "@/contracts/events/trace-events";
 import type {
   ArrayVisualState,
+  LinearItemVisual,
   SemanticVisualState,
   VisualizationState,
 } from "@/contracts/events/visualization-state";
@@ -23,17 +24,13 @@ export function traceStepToVisualization(
       ? graphState(slug, step, metrics, status)
       : slug === "binary-search-tree"
         ? treeStepToVisualization(step, metrics, status)
-        : slug === "stack"
-          ? linearState("stack", step, metrics, status)
-          : slug === "queue"
-            ? linearState("queue", step, metrics, status)
-            : slug === "linked-list"
-              ? linearState("linked-list", step, metrics, status)
-              : slug === "hash-table"
-                ? hashTableState(step, metrics, status)
-                : slug === "heap"
-                  ? deriveHeapStepView(step, metrics, status)
-                  : arrayState(trace, step, metrics, status);
+        : slug === "stack" || slug === "queue" || slug === "linked-list"
+          ? linearState(slug, trace, step, metrics, status)
+          : slug === "hash-table"
+            ? hashTableState(step, metrics, status)
+            : slug === "heap"
+              ? deriveHeapStepView(step, metrics, status, trace)
+              : arrayState(slug, trace, step, metrics, status);
   return {
     ...visualization,
     selectedAlgorithm: slug,
@@ -46,51 +43,99 @@ export function traceStepToVisualization(
 }
 
 function arrayState(
+  slug: string,
   trace: CanonicalExecutionTrace,
   step: ExecutionTraceStep,
   metrics: ExecutionMetrics,
   status: VisualizationState["status"]
 ): ArrayVisualState {
+  const isSearch = slug === "binary-search" || slug === "linear-search";
   const after = Array.isArray(step.stateAfter) ? (step.stateAfter as number[]) : [7, 3, 9, 2, 5];
   const payload = (step.event.payload ?? {}) as Record<string, unknown>;
   const indexes = Array.isArray(payload.indexes)
     ? payload.indexes.filter((x): x is number => typeof x === "number")
-    : [];
+    : typeof payload.index === "number"
+      ? [payload.index]
+      : [];
   const elementIds = deriveStableElementIds(trace, step.stepIndex, after);
   const elementStates: Record<number, SemanticVisualState> = {};
-  if (step.event.type === "SWAP" || step.event.type === "COMPARE")
+  const pointers: Record<string, number> = {};
+  let activeRange: [number, number] | undefined;
+
+  if (typeof payload.low === "number" && typeof payload.high === "number") {
+    activeRange = [payload.low, payload.high];
+    pointers.low = payload.low;
+    pointers.high = payload.high;
+    for (let i = 0; i < after.length; i++) {
+      if (i < payload.low || i > payload.high) elementStates[i] = "disabled";
+    }
+  }
+  if (typeof payload.mid === "number") {
+    pointers.mid = payload.mid;
+  }
+
+  if (step.event.type === "SWAP" || step.event.type === "COMPARE") {
+    const state = step.event.type === "SWAP" ? "swapping" : "comparing";
     indexes.forEach((index) => {
-      elementStates[index] = step.event.type === "SWAP" ? "swapping" : "comparing";
+      elementStates[index] = state;
     });
-  if (step.event.type === "WRITE")
+    if (step.event.type === "COMPARE" && typeof payload.mid === "number") {
+      elementStates[payload.mid] = "comparing";
+    }
+  } else if (step.event.type === "WRITE") {
     indexes.forEach((index) => {
       elementStates[index] = "writing";
     });
-  if (step.event.type === "SELECT")
+  } else if (step.event.type === "SELECT") {
     indexes.forEach((index) => {
       elementStates[index] = "selected";
     });
-  if (step.event.type === "PIVOT" && typeof payload.index === "number")
+  } else if (step.event.type === "SET_CURRENT" && typeof payload.index === "number") {
+    elementStates[payload.index] = "current";
+  } else if (step.event.type === "PIVOT" && typeof payload.index === "number") {
     elementStates[payload.index] = "pivot";
-  if (step.event.type === "MARK_SORTED")
+  } else if (step.event.type === "FOUND" && typeof payload.index === "number") {
+    for (let i = 0; i < after.length; i++) elementStates[i] = "disabled";
+    elementStates[payload.index] = "success";
+    pointers.found = payload.index;
+  } else if (step.event.type === "NOT_FOUND") {
+    for (let i = 0; i < after.length; i++) elementStates[i] = "disabled";
+  } else if (step.event.type === "MARK_SORTED") {
     indexes.forEach((index) => {
       elementStates[index] = "sorted";
     });
+  } else if (step.event.type === "COMPLETE" && isSearch) {
+    const foundStep = trace.steps
+      .slice(0, step.stepIndex + 1)
+      .findLast((s) => s.event.type === "FOUND");
+    const foundPayload = (foundStep?.event.payload ?? {}) as Record<string, unknown>;
+    const foundIndex = typeof foundPayload.index === "number" ? foundPayload.index : undefined;
+    for (let i = 0; i < after.length; i++) elementStates[i] = "disabled";
+    if (foundIndex !== undefined) {
+      elementStates[foundIndex] = "success";
+      pointers.found = foundIndex;
+    }
+  }
+
+  const activeIndexes =
+    indexes.length > 0 ? indexes : typeof payload.mid === "number" ? [payload.mid] : [];
   const sortedIndexes =
-    step.event.type === "COMPLETE"
+    step.event.type === "COMPLETE" && !isSearch
       ? after.map((_, i) => i)
       : step.event.type === "MARK_SORTED"
         ? indexes
         : [];
+
   return toArrayVisualizationState(
     {
       values: after,
       elementIds,
       elementStates,
-      activeIndexes: indexes,
-      highlightedIndexes: indexes,
+      activeIndexes,
+      highlightedIndexes: activeIndexes,
       sortedIndexes,
-      pointers: typeof payload.mid === "number" ? { mid: payload.mid } : {},
+      activeRange,
+      pointers,
     },
     step.stepIndex,
     metrics,
@@ -105,21 +150,52 @@ function deriveStableElementIds(
 ): string[] {
   const initial = Array.isArray(trace.input) ? (trace.input as number[]) : [];
   const tokens = initial.map((value, index) => ({ id: `array-${index}`, value }));
+  let lifted: { id: string; value: number } | undefined;
+  let holeIndex: number | undefined;
+
+  const commitLifted = (): void => {
+    if (lifted !== undefined && holeIndex !== undefined && tokens[holeIndex]) {
+      tokens[holeIndex] = lifted;
+    }
+    lifted = undefined;
+    holeIndex = undefined;
+  };
+
   for (const traceStep of trace.steps.slice(0, stepIndex + 1)) {
     const payload = (traceStep.event.payload ?? {}) as Record<string, unknown>;
     const indexes = Array.isArray(payload.indexes)
       ? payload.indexes.filter((x): x is number => typeof x === "number")
       : [];
-    if (traceStep.event.type === "SWAP" && indexes.length >= 2) {
+
+    if (traceStep.event.type === "SET_CURRENT" && typeof payload.index === "number") {
+      commitLifted();
+      const idx = payload.index;
+      if (tokens[idx]) {
+        lifted = tokens[idx];
+        holeIndex = idx;
+      }
+    } else if (traceStep.event.type === "SWAP" && indexes.length >= 2) {
+      commitLifted();
       const [a, b] = indexes;
-      [tokens[a], tokens[b]] = [tokens[b], tokens[a]];
-    } else if (traceStep.event.type === "WRITE" && indexes.length >= 1) {
-      const target = indexes[0];
-      const value = values[target];
-      if (typeof value === "number" && tokens[target])
-        tokens[target] = { ...tokens[target], value };
+      if (tokens[a] && tokens[b]) {
+        [tokens[a], tokens[b]] = [tokens[b], tokens[a]];
+      }
+    } else if (traceStep.event.type === "WRITE") {
+      const target = indexes[0] ?? (typeof payload.index === "number" ? payload.index : undefined);
+      if (target !== undefined) {
+        if (lifted !== undefined && holeIndex !== undefined && target === holeIndex && target > 0) {
+          tokens[target] = tokens[target - 1]!;
+          holeIndex = target - 1;
+        } else if (tokens[target]) {
+          const value = values[target];
+          if (typeof value === "number") tokens[target] = { ...tokens[target], value };
+        }
+      }
+    } else if (traceStep.event.type === "COMPLETE" || traceStep.event.type === "MARK_SORTED") {
+      commitLifted();
     }
   }
+
   return values.map((_, index) => tokens[index]?.id ?? `array-${index}`);
 }
 
@@ -156,8 +232,39 @@ function hashTableState(
   };
 }
 
+function deriveLinearEntries(
+  kind: "stack" | "queue",
+  trace: CanonicalExecutionTrace,
+  stepIndex: number,
+  currentItems: unknown[]
+): LinearItemVisual[] {
+  const tokens: Array<{ id: string; value: unknown }> = [];
+  let seq = 0;
+
+  for (const traceStep of trace.steps.slice(0, stepIndex + 1)) {
+    const payload = (traceStep.event.payload ?? {}) as Record<string, unknown>;
+    if (kind === "stack") {
+      if (traceStep.event.type === "PUSH") {
+        tokens.push({ id: `stack-item-${seq++}`, value: payload.value });
+      } else if (traceStep.event.type === "POP") {
+        tokens.pop();
+      }
+    } else if (traceStep.event.type === "ENQUEUE") {
+      tokens.push({ id: `queue-item-${seq++}`, value: payload.value });
+    } else if (traceStep.event.type === "DEQUEUE") {
+      tokens.shift();
+    }
+  }
+
+  return currentItems.map((value, index) => ({
+    id: tokens[index]?.id ?? `${kind}-fallback-${index}`,
+    value,
+  }));
+}
+
 function linearState(
   kind: "stack" | "queue" | "linked-list",
+  trace: CanonicalExecutionTrace,
   step: ExecutionTraceStep,
   metrics: ExecutionMetrics,
   status: VisualizationState["status"]
@@ -165,8 +272,18 @@ function linearState(
   const state = (step.stateAfter ?? {}) as Record<string, unknown>;
   const payload = (step.event.payload ?? {}) as Record<string, unknown>;
   const active = typeof payload.value === "number" ? [payload.value] : [];
+
   if (kind === "stack") {
     const items = Array.isArray(state.items) ? state.items : [];
+    const entries = deriveLinearEntries("stack", trace, step.stepIndex, items).map(
+      (entry, idx) => ({
+        ...entry,
+        state: (idx === items.length - 1 &&
+        (step.event.type === "PUSH" || step.event.type === "READ")
+          ? "current"
+          : "default") as SemanticVisualState,
+      })
+    );
     return {
       type: "stack",
       stepIndex: step.stepIndex,
@@ -178,10 +295,20 @@ function linearState(
       metrics,
       status,
       items,
+      itemEntries: entries,
     };
   }
   if (kind === "queue") {
     const items = Array.isArray(state.items) ? state.items : [];
+    const entries = deriveLinearEntries("queue", trace, step.stepIndex, items).map(
+      (entry, idx) => ({
+        ...entry,
+        state: ((idx === items.length - 1 && step.event.type === "ENQUEUE") ||
+        (idx === 0 && step.event.type === "READ")
+          ? "current"
+          : "default") as SemanticVisualState,
+      })
+    );
     return {
       type: "queue",
       stepIndex: step.stepIndex,
@@ -193,6 +320,7 @@ function linearState(
       metrics,
       status,
       items,
+      itemEntries: entries,
     };
   }
   const raw = Array.isArray(state.items) ? state.items : [];
@@ -209,10 +337,7 @@ function linearState(
       {
         id: typed.id,
         value: typed.value,
-        state:
-          typed.id === currentId
-            ? "current"
-            : ("default" as import("@/contracts/events/visualization-state").SemanticVisualState),
+        state: (typed.id === currentId ? "current" : "default") as SemanticVisualState,
       },
     ];
   });

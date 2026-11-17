@@ -12,6 +12,7 @@ export interface ArrayVisualizationInput {
   sortedIndexes?: readonly number[];
   pivotIndex?: number;
   selectedIndexes?: readonly number[];
+  activeRange?: [number, number];
   pointers?: Readonly<Record<string, number>>;
   elementIds?: readonly string[];
   elementStates?: Readonly<Record<number, SemanticVisualState>>;
@@ -48,6 +49,7 @@ export function toArrayVisualizationState(
     queueState: [],
     stackState: [],
     activeIndexes: input.activeIndexes ? [...input.activeIndexes] : [],
+    activeRange: input.activeRange,
     elementStates: input.elementStates ? { ...input.elementStates } : undefined,
     pointers: input.pointers ?? {},
   };
@@ -114,12 +116,20 @@ export function toGraphVisualizationState(
     fScore: input.fScores?.[node.id],
     parentId: input.parents?.[node.id],
   }));
-  const edges = input.edges.map((edge) => ({
-    source: edge.source,
-    target: edge.target,
-    weight: edge.weight,
-    state: edgeState(edge, input.activeEdges ?? [], path),
-  }));
+  const seenEdges = new Map<string, number>();
+  const edges = input.edges.map((edge) => {
+    const pairKey = `${edge.source}->${edge.target}`;
+    const occurrence = seenEdges.get(pairKey) ?? 0;
+    seenEdges.set(pairKey, occurrence + 1);
+    const id = occurrence === 0 ? `edge:${pairKey}` : `edge:${pairKey}#${occurrence}`;
+    return {
+      id,
+      source: edge.source,
+      target: edge.target,
+      weight: edge.weight,
+      state: edgeState(edge, input.activeEdges ?? [], path),
+    };
+  });
   return {
     type: "graph",
     stepIndex,

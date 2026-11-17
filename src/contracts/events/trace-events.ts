@@ -29,6 +29,10 @@ export const EXECUTION_EVENT_TYPES = [
 
 export type ExecutionEventType = (typeof EXECUTION_EVENT_TYPES)[number];
 
+export interface AlgorithmStepObserver {
+  emit(type: ExecutionEventType, payload?: Record<string, unknown>, stateAfter?: unknown): void;
+}
+
 export interface TraceEntityReference {
   entityType:
     "array-index" | "node" | "edge" | "stack-item" | "queue-item" | "tree-node" | "generic";

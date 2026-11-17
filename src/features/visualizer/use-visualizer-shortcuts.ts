@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import type { PlaybackStatus } from "@/core/visualization/playback/playback-controller";
+import type { PlaybackStatus } from "@/contracts/visualization";
 
 import { shouldHandleVisualizerShortcut } from "./interaction-safety";
 
@@ -27,7 +27,8 @@ export function useVisualizerShortcuts({
       const key = event.key.toLowerCase();
       if (key === " ") {
         event.preventDefault();
-        onRun(status === "PLAYING" ? "pause" : "play");
+        const isActive = status === "PLAYING" || status === "ANIMATING";
+        onRun(isActive ? "pause" : "play");
       } else if (event.key === "ArrowRight") {
         event.preventDefault();
         onRun("next");

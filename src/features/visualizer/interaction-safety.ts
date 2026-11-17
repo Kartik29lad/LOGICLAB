@@ -23,7 +23,7 @@ export function guardPlaybackInteraction(
 ): InteractionGuardResult {
   if (traceLength <= 0) return { allowed: false, reason: "No execution trace is available yet." };
   if (action === "play" && status === "COMPLETED") return { allowed: true };
-  if (action === "next" && status === "PLAYING")
+  if (action === "next" && (status === "PLAYING" || status === "ANIMATING"))
     return { allowed: false, reason: "Pause playback before manually stepping." };
   return { allowed: true };
 }

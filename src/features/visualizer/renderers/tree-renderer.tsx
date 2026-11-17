@@ -1,9 +1,14 @@
 "use client";
 
-import type { TreeVisualState } from "@/contracts/events/visualization-state";
-import type { AnimationIntent } from "@/core/visualization/motion";
+import { useMemo, useRef } from "react";
 
-type Positioned = TreeVisualState["nodes"][string] & { x: number; y: number };
+import type { TreeVisualState } from "@/contracts/events/visualization-state";
+import type { AnimationIntent } from "@/contracts/visualization";
+
+import { useStepMotionLayout } from "../motion/motion-context";
+import { buildTreeStepTimeline, type PositionedTreeNode } from "../motion/presets/tree-presets";
+
+type Positioned = TreeVisualState["nodes"][string] & PositionedTreeNode;
 
 export function TreeRenderer({
   state,
@@ -14,11 +19,31 @@ export function TreeRenderer({
   animationIntent?: AnimationIntent | null;
   reducedMotion?: boolean;
 }): React.JSX.Element {
-  const positions = layoutTree(state);
-  const byId = new Map(positions.map((node) => [node.id, node]));
+  const positions = useMemo(() => layoutTree(state), [state]);
+  const byId = useMemo(() => new Map(positions.map((node) => [node.id, node])), [positions]);
+  const prevPositionsRef = useRef<Positioned[]>(positions);
+
+  const motion = useStepMotionLayout(
+    state.stepIndex,
+    (committed) => {
+      const prev = prevPositionsRef.current;
+      prevPositionsRef.current = positions;
+      return buildTreeStepTimeline({
+        engine: committed.engine,
+        intent: animationIntent,
+        prevNodes: prev,
+        nextNodes: positions,
+        elements: committed.registry.getAll(),
+        generation: committed.generation,
+      });
+    },
+    [animationIntent, positions, state.stepIndex]
+  );
+
   return (
     <div
       className="viz-tree-lab"
+      data-motion-owned="gsap"
       data-animation-intent={animationIntent?.type ?? "none"}
       data-reduced-motion={reducedMotion ? "true" : "false"}
       role="img"
@@ -43,9 +68,12 @@ export function TreeRenderer({
           {positions.flatMap((node) =>
             [node.leftId, node.rightId].map((childId) => {
               const child = childId ? byId.get(childId) : undefined;
+              const edgeId = child ? `tree-edge:${node.id}->${child.id}` : "";
               return child ? (
                 <line
-                  key={`${node.id}-${child.id}`}
+                  key={edgeId}
+                  ref={(el) => motion.registry.register(edgeId, el)}
+                  data-edge-id={edgeId}
                   x1={node.x}
                   y1={node.y + 25}
                   x2={child.x}
@@ -59,6 +87,8 @@ export function TreeRenderer({
           {positions.map((node) => (
             <g
               key={node.id}
+              ref={(el) => motion.registry.register(node.id, el)}
+              data-node-id={node.id}
               className="viz-tree-node"
               data-state={node.state}
               transform={`translate(${node.x} ${node.y})`}
@@ -94,7 +124,7 @@ export function TreeRenderer({
   );
 }
 
-function layoutTree(state: TreeVisualState): Positioned[] {
+export function layoutTree(state: TreeVisualState): Positioned[] {
   if (!state.rootId) return [];
   const levels = new Map<string, number>();
   const order: string[] = [];
@@ -111,7 +141,7 @@ function layoutTree(state: TreeVisualState): Positioned[] {
   const maxDepth = Math.max(0, ...levels.values());
   const positions: Positioned[] = [];
   order.forEach((id, index) => {
-    const node = state.nodes[id];
+    const node = state.nodes[id]!;
     const depth = levels.get(id) ?? 0;
     positions.push({
       ...node,

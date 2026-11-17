@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 
 import type { VisualStateSnapshot } from "@/contracts/events/visualization-state";
+import type { AnimationIntent } from "@/contracts/visualization";
 
 import { VisualizationErrorBoundary } from "./visualization-error-boundary";
 
@@ -32,7 +33,12 @@ export interface RendererRegistration<TState extends VisualStateSnapshot = Visua
     context?: {
       speed?: number;
       reducedMotion?: boolean;
-      animationIntent?: { type?: string } | null;
+      animationIntent?: AnimationIntent | null;
+      algorithmSlug?: string;
+      graphEditor?: {
+        enabled: boolean;
+        onNodeMove?: (nodeId: string, x: number, y: number) => void;
+      };
     }
   ): React.JSX.Element;
 }
@@ -40,7 +46,8 @@ export interface RendererRegistration<TState extends VisualStateSnapshot = Visua
 export interface VisualizationRenderOptions {
   speed?: number;
   reducedMotion?: boolean;
-  animationIntent?: { type?: string } | null;
+  animationIntent?: AnimationIntent | null;
+  algorithmSlug?: string;
   graphEditor?: { enabled: boolean; onNodeMove?: (nodeId: string, x: number, y: number) => void };
   resetKey?: string | number;
 }
@@ -56,6 +63,9 @@ export const RENDERER_REGISTRY: Readonly<Record<string, RendererRegistration>> =
         speed={context?.speed}
         reducedMotion={context?.reducedMotion}
         animationIntent={context?.animationIntent as never}
+        isSearch={
+          context?.algorithmSlug === "binary-search" || context?.algorithmSlug === "linear-search"
+        }
       />
     ),
   },
@@ -66,6 +76,7 @@ export const RENDERER_REGISTRY: Readonly<Record<string, RendererRegistration>> =
     render: (state, context) => (
       <GraphRenderer
         state={state as never}
+        editor={context?.graphEditor}
         animationIntent={context?.animationIntent}
         reducedMotion={context?.reducedMotion}
       />
@@ -87,31 +98,66 @@ export const RENDERER_REGISTRY: Readonly<Record<string, RendererRegistration>> =
     type: "stack",
     displayName: "Stack",
     version: "2.1",
-    render: (state) => <LinearRenderers kind="stack" state={state as never} />,
+    render: (state, context) => (
+      <LinearRenderers
+        kind="stack"
+        state={state as never}
+        animationIntent={context?.animationIntent as never}
+        reducedMotion={context?.reducedMotion}
+      />
+    ),
   },
   queue: {
     type: "queue",
     displayName: "Queue",
     version: "2.1",
-    render: (state) => <LinearRenderers kind="queue" state={state as never} />,
+    render: (state, context) => (
+      <LinearRenderers
+        kind="queue"
+        state={state as never}
+        animationIntent={context?.animationIntent as never}
+        reducedMotion={context?.reducedMotion}
+      />
+    ),
   },
   "linked-list": {
     type: "linked-list",
     displayName: "Linked List",
     version: "2.1",
-    render: (state) => <LinearRenderers kind="linked-list" state={state as never} />,
+    render: (state, context) => (
+      <LinearRenderers
+        kind="linked-list"
+        state={state as never}
+        animationIntent={context?.animationIntent as never}
+        reducedMotion={context?.reducedMotion}
+      />
+    ),
   },
   "hash-table": {
     type: "hash-table",
     displayName: "Hash Table",
     version: "2.1",
-    render: (state) => <LinearRenderers kind="hash-table" state={state as never} />,
+    render: (state, context) => (
+      <LinearRenderers
+        kind="hash-table"
+        state={state as never}
+        animationIntent={context?.animationIntent as never}
+        reducedMotion={context?.reducedMotion}
+      />
+    ),
   },
   heap: {
     type: "heap",
     displayName: "Heap",
     version: "2.1",
-    render: (state) => <LinearRenderers kind="heap" state={state as never} />,
+    render: (state, context) => (
+      <LinearRenderers
+        kind="heap"
+        state={state as never}
+        animationIntent={context?.animationIntent as never}
+        reducedMotion={context?.reducedMotion}
+      />
+    ),
   },
   grid: {
     type: "grid",
@@ -142,6 +188,8 @@ export function renderVisualization(
         speed: options.speed,
         reducedMotion: options.reducedMotion,
         animationIntent: options.animationIntent,
+        algorithmSlug: options.algorithmSlug,
+        graphEditor: options.graphEditor,
       })}
     </VisualizationErrorBoundary>
   );

@@ -44,6 +44,7 @@ export interface ArrayVisualState extends VisualizationCommonState {
   elements: ArrayElementVisual[];
   pointers: Record<string, number>;
   activeIndexes?: number[];
+  activeRange?: [number, number];
   elementStates?: Record<number, SemanticVisualState>;
 }
 
@@ -60,6 +61,7 @@ export interface GraphNodeVisual {
 }
 
 export interface GraphEdgeVisual {
+  id?: string;
   source: string;
   target: string;
   weight?: number;
@@ -103,14 +105,22 @@ export interface TreeVisualState extends VisualizationCommonState {
   nodes: Record<string, TreeNodeVisual>;
 }
 
+export interface LinearItemVisual<T = unknown> {
+  id: string;
+  value: T;
+  state?: SemanticVisualState;
+}
+
 export interface StackVisualState extends VisualizationCommonState {
   type: "stack";
   items: unknown[];
+  itemEntries?: LinearItemVisual[];
 }
 
 export interface QueueVisualState extends VisualizationCommonState {
   type: "queue";
   items: unknown[];
+  itemEntries?: LinearItemVisual[];
 }
 
 export interface LinkedListVisualState extends VisualizationCommonState {
@@ -128,6 +138,7 @@ export interface HashTableVisualState extends VisualizationCommonState {
 export interface HeapVisualState extends VisualizationCommonState {
   type: "heap";
   items: number[];
+  itemEntries?: LinearItemVisual<number>[];
   activeIndex?: number;
   comparingIndexes: number[];
   swappingIndexes: number[];

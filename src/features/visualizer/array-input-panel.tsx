@@ -74,7 +74,7 @@ export function ArrayInputPanel({
               if (error) setError(null);
             }}
             placeholder="7, 3, 9, 2, 5"
-            rows={3}
+            rows={2}
             disabled={disabled}
             aria-describedby={error ? "array-input-error" : "array-input-help"}
           />

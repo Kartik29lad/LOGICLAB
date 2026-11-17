@@ -120,10 +120,15 @@
      Motion Tokens
      ========================================================================== */
   --motion-micro: 120ms;
-  --motion-fast: 160ms;
+  --motion-fast: 180ms;
   --motion-normal: 220ms;
   --motion-slow: 320ms;
-  --motion-structural: 420ms;
+  --motion-structural: 480ms;
+  --motion-compare: 240ms;
+  --motion-swap: 420ms;
+  --motion-traverse: 320ms;
+  --motion-relax: 280ms;
+  --motion-settle: 200ms;
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.2, 0, 0, 1);
@@ -148,5 +153,10 @@
     --motion-normal: 0ms;
     --motion-slow: 0ms;
     --motion-structural: 0ms;
+    --motion-compare: 0ms;
+    --motion-swap: 0ms;
+    --motion-traverse: 0ms;
+    --motion-relax: 0ms;
+    --motion-settle: 0ms;
   }
 }
