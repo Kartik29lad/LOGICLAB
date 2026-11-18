@@ -2375,12 +2375,14 @@ html[data-reduced-motion="true"] *::after {
 }
 
 @media (forced-colors: active) {
-  :focus-visible {
+  :focus-visible,
+  .header-search:focus-within {
     outline: 2px solid CanvasText;
   }
   .button,
   .nav-item,
   .card,
+  .header-search,
   .input,
   .select,
   textarea,
@@ -3077,4 +3079,184 @@ html[data-reduced-motion="true"] *::after {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
+}
+
+/* Search-page shell refinements: mirror the compact navigation in the approved reference
+   without changing the shared navigation used by other routes. */
+
+.app-shell:has([data-page="global-search"]) .app-sidebar .sidebar-navigation {
+  gap: 0;
+}
+
+.app-shell:has([data-page="global-search"]) .app-sidebar .nav-group {
+  display: contents;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.app-shell:has([data-page="global-search"]) .app-sidebar .nav-group h2 {
+  display: none;
+}
+
+.app-shell:has([data-page="global-search"]) .app-sidebar .nav-list {
+  display: contents;
+}
+
+.app-shell:has([data-page="global-search"]) .app-sidebar .nav-item {
+  display: none;
+}
+
+.app-shell:has([data-page="global-search"]) .app-sidebar .nav-item[href="/"],
+.app-shell:has([data-page="global-search"]) .app-sidebar .nav-item[href="/algorithms"],
+.app-shell:has([data-page="global-search"]) .app-sidebar .nav-item[href="/progress"],
+.app-shell:has([data-page="global-search"]) .app-sidebar .nav-item[href="/settings"] {
+  display: flex;
+}
+
+.app-shell:has([data-page="global-search"]) .app-sidebar .nav-item[href="/algorithms"] {
+  color: var(--color-primary-hover);
+  background: var(--color-primary-soft);
+}
+
+.app-shell:has([data-page="global-search"])
+  .app-sidebar
+  .nav-item[href="/algorithms"]
+  .nav-item__label {
+  font-size: 0;
+}
+
+.app-shell:has([data-page="global-search"])
+  .app-sidebar
+  .nav-item[href="/algorithms"]
+  .nav-item__label::after {
+  content: "Explore Library";
+  font-size: var(--text-body-sm);
+}
+
+.app-shell:has([data-page="global-search"]) .app-sidebar .nav-item[href="/algorithms"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--color-primary);
+}
+
+.app-shell:has([data-page="global-search"]) .app-sidebar .sidebar-streak {
+  display: none;
+}
+
+.app-shell:has([data-page="global-search"]) .app-sidebar .nav-group:last-child {
+  margin-top: 0;
+}
+
+/* Final reference alignment and page-scoped shell treatment. */
+.app-shell:has([data-page="global-search"]) .app-header > .brand {
+  display: none;
+}
+
+.app-shell:has([data-page="global-search"]) .app-header .header-search {
+  width: min(50rem, 56vw);
+  margin-left: clamp(5rem, 13.4vw, 13.8rem);
+}
+
+.app-shell:has([data-page="global-search"]) .header-account__avatar {
+  position: relative;
+  overflow: hidden;
+  color: transparent;
+  background: #315fd0;
+  border-color: rgba(111, 151, 255, 0.45);
+  box-shadow: none;
+  font-size: 0;
+}
+
+.app-shell:has([data-page="global-search"]) .header-account__avatar::after {
+  content: "K";
+  color: #f7f9ff;
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.app-shell:has([data-page="global-search"]) .sidebar-brand__mark {
+  width: 2.7rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 0;
+  color: transparent;
+  font-size: 0;
+  box-shadow: none;
+}
+
+.app-shell:has([data-page="global-search"]) .sidebar-brand__mark::after {
+  content: "</>";
+  color: #42e2cc;
+  font-family: var(--font-code);
+  font-size: 1.55rem;
+  font-weight: 850;
+  letter-spacing: -0.1em;
+}
+
+.app-shell:has([data-page="global-search"]) .sidebar-brand__copy small {
+  display: none;
+}
+
+.app-shell:has([data-page="global-search"]) .sidebar-brand__copy strong {
+  font-size: 1.27rem;
+  letter-spacing: -0.035em;
+}
+
+.app-shell:has([data-page="global-search"]) .sidebar-brand {
+  gap: 0.55rem;
+  min-height: 3.25rem;
+  margin-bottom: 1.2rem;
+  padding-inline: 0.45rem;
+}
+
+.app-shell:has([data-page="global-search"])
+  .app-sidebar
+  .nav-item[href="/algorithms"]
+  .nav-item__icon
+  svg {
+  display: none;
+}
+
+.app-shell:has([data-page="global-search"])
+  .app-sidebar
+  .nav-item[href="/algorithms"]
+  .nav-item__icon::before {
+  content: "";
+  display: block;
+  width: 1.15rem;
+  height: 1.15rem;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5z'/%3E%3Cpath d='M4 17.5A2.5 2.5 0 0 1 6.5 15H20M9 7h7m-7 4h7'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5z'/%3E%3Cpath d='M4 17.5A2.5 2.5 0 0 1 6.5 15H20M9 7h7m-7 4h7'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+@media (max-width: 1200px) and (min-width: 901px) {
+  .app-shell:has([data-page="global-search"]) .app-header .header-search {
+    margin-left: clamp(2.5rem, 6vw, 6rem);
+    width: min(43rem, 52vw);
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell:has([data-page="global-search"]) .app-header .header-search {
+    margin-left: 0;
+    width: min(34rem, 48vw);
+  }
+  .app-shell:has([data-page="global-search"]) .app-header > .brand {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell:has([data-page="global-search"]) .app-header .header-search {
+    width: min(100%, 19rem);
+  }
 }

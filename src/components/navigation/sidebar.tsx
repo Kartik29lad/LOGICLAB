@@ -169,7 +169,8 @@ export function Sidebar({ open, onNavigate }: Readonly<{ open: boolean; onNaviga
                       ? pathname === "/algorithms" ||
                         pathname.startsWith("/algorithms/") ||
                         pathname === "/data-structures" ||
-                        pathname.startsWith("/data-structures/")
+                        pathname.startsWith("/data-structures/") ||
+                        pathname === "/search"
                       : pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
                   <Link
