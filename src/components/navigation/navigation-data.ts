@@ -1,35 +1,38 @@
 export type NavigationItem = { href: string; label: string; icon: string };
 export type NavigationGroup = { id?: string; label: string; items: NavigationItem[] };
 
+/** Primary product navigation, grouped by the learner's workflow. */
 export const navigationGroups: NavigationGroup[] = [
-  { id: "home", label: "", items: [{ href: "/", label: "Home", icon: "⌂" }] },
   {
-    id: "explore",
-    label: "Explore",
+    id: "learn",
+    label: "",
     items: [
-      { href: "/algorithms", label: "Algorithms", icon: "◇" },
-      { href: "/data-structures", label: "Data Structures", icon: "▦" },
-      { href: "/visualizer", label: "Visualizer", icon: "◉" },
+      { href: "/", label: "Home", icon: "home" },
+      { href: "/algorithms", label: "Explore", icon: "explore" },
+      { href: "/learning-paths", label: "Learning Paths", icon: "paths" },
     ],
   },
   {
     id: "practice",
     label: "Practice",
     items: [
-      { href: "/challenges", label: "Challenges", icon: "◆" },
-      { href: "/compare", label: "Compare", icon: "⇄" },
+      { href: "/visualizer", label: "Interactive Lab", icon: "lab" },
+      { href: "/challenges", label: "Challenges", icon: "challenges" },
+      { href: "/compare", label: "Compare", icon: "compare" },
     ],
   },
   {
-    id: "learning",
-    label: "My Learning",
+    id: "my-space",
+    label: "My Space",
     items: [
-      { href: "/progress", label: "Progress", icon: "◒" },
-      { href: "/history", label: "History", icon: "◷" },
-      { href: "/favorites", label: "Favorites", icon: "☆" },
-      { href: "/bookmarks", label: "Bookmarks", icon: "🔖" },
-      { href: "/activity", label: "Activity", icon: "▥" },
+      { href: "/progress", label: "My Learning", icon: "progress" },
+      { href: "/favorites", label: "Saved Items", icon: "saved" },
+      { href: "/activity", label: "Recent Activity", icon: "activity" },
     ],
   },
-  { id: "settings", label: "", items: [{ href: "/settings", label: "Settings", icon: "⚙" }] },
+  {
+    id: "settings",
+    label: "",
+    items: [{ href: "/settings", label: "Settings", icon: "settings" }],
+  },
 ];

@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/navigation/header";
 import { Sidebar } from "@/components/navigation/sidebar";
 
 export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -73,7 +75,11 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
-      <Header onMenuClick={() => setSidebarOpen((open) => !open)} menuOpen={sidebarOpen} />
+      <Header
+        onMenuClick={() => setSidebarOpen((open) => !open)}
+        menuOpen={sidebarOpen}
+        searchAction={pathname === "/algorithms" ? "/algorithms" : "/search"}
+      />
       <Sidebar open={sidebarOpen} onNavigate={closeSidebar} />
       <button
         type="button"

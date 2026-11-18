@@ -1,13 +1,26 @@
 import { canonicalMetadata } from "@/lib/seo";
-import { DISCOVERY_CATEGORIES, getDiscoveryContent } from "@/content/discovery";
+import { DISCOVERY_CONTENT } from "@/content/discovery";
 import type { Difficulty } from "@/content/schema/content-types";
-import { DiscoveryExplorer } from "@/features/algorithms/discovery-explorer";
+import { ExploreLibrary } from "@/features/algorithms/explore-library";
 
 export const metadata = canonicalMetadata("/algorithms", {
-  title: "Algorithms — Interactive Learning Catalog",
+  title: "Explore Library — Algorithms & Data Structures",
   description:
-    "Explore sorting, searching, and graph algorithms with step-by-step explanations, complexity analysis, and interactive learning experiences.",
+    "Discover algorithms and data structures by topic, difficulty, and category, then open their explanations and interactive visualizations.",
 });
+
+const DIFFICULTIES: Difficulty[] = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
+
+const CATEGORY_ALIASES: Record<string, string> = {
+  sorting: "Sorting",
+  searching: "Searching",
+  graphs: "Graphs",
+  graph: "Graphs",
+  trees: "Trees",
+  "data-structures": "Others",
+  "data structures": "Others",
+  others: "Others",
+};
 
 export default async function AlgorithmsPage({
   searchParams,
@@ -19,36 +32,26 @@ export default async function AlgorithmsPage({
     const raw = params[key];
     return Array.isArray(raw) ? (raw[0] ?? "") : (raw ?? "");
   };
-  const items = getDiscoveryContent("ALGORITHM");
-  const categories = DISCOVERY_CATEGORIES.filter((category) =>
-    items.some((item) => item.metadata.category === category)
+
+  const items = DISCOVERY_CONTENT.filter(
+    (item) =>
+      item.metadata.isActive &&
+      (item.metadata.type === "ALGORITHM" || item.metadata.type === "DATA_STRUCTURE")
   );
-  const tags = [...new Set(items.flatMap((item) => item.metadata.tags))].sort();
-  const requestedDifficulty = value("difficulty");
-  const initialDifficulty: Difficulty | "ALL" = ["BEGINNER", "INTERMEDIATE", "ADVANCED"].includes(
-    requestedDifficulty
+  const requestedDifficulty = value("difficulty").toUpperCase();
+  const initialDifficulty: Difficulty | "ALL" = DIFFICULTIES.includes(
+    requestedDifficulty as Difficulty
   )
     ? (requestedDifficulty as Difficulty)
     : "ALL";
+  const rawCategory = value("category").toLowerCase();
+
   return (
-    <>
-      <header className="page-header">
-        <div>
-          <span className="page-header__eyebrow">Explore</span>
-          <h1>Algorithms</h1>
-          <p>Find an algorithm by name, category, or difficulty, then open its learning space.</p>
-        </div>
-      </header>
-      <DiscoveryExplorer
-        items={items}
-        type="algorithms"
-        categories={categories}
-        tags={tags}
-        initialQuery={value("q")}
-        initialCategory={value("category") || "ALL"}
-        initialDifficulty={initialDifficulty}
-        initialTag={value("tag") || "ALL"}
-      />
-    </>
+    <ExploreLibrary
+      items={items}
+      initialQuery={value("q")}
+      initialCategory={CATEGORY_ALIASES[rawCategory] ?? "ALL"}
+      initialDifficulty={initialDifficulty}
+    />
   );
 }
