@@ -1,62 +1,29 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 
 import { getDiscoveryContent } from "@/content/discovery";
+import type { Difficulty, SourceContentType } from "@/content/schema/content-types";
+import { InteractiveLab, type InteractiveLabItem } from "@/features/visualizer/interactive-lab";
 
-export default function Page() {
-  const algorithms = getDiscoveryContent("ALGORITHM").filter((item) =>
-    Boolean(item.metadata.visualizationType)
-  );
-  const structures = getDiscoveryContent("DATA_STRUCTURE").filter((item) =>
-    Boolean(item.metadata.visualizationType)
-  );
-  return (
-    <div className="visualizer-route">
-      <header className="page-header">
-        <div>
-          <span className="page-header__eyebrow">LogicLab Laboratory</span>
-          <h1>Interactive Visualizer</h1>
-          <p>
-            Choose a laboratory and watch the canonical execution trace become a live visual
-            explanation.
-          </p>
-        </div>
-      </header>
-      <section className="visualizer-landing-section" aria-labelledby="visualizer-algorithms">
-        <h2 id="visualizer-algorithms">Algorithms</h2>
-        <div className="visualizer-landing-grid">
-          {algorithms.map((item) => (
-            <Link
-              className="visualizer-landing-card"
-              href={`/visualizer/${item.metadata.slug}`}
-              key={item.metadata.slug}
-            >
-              <span className="visualizer-landing-card__meta">
-                Algorithm · {item.metadata.category}
-              </span>
-              <h2>{item.metadata.title}</h2>
-              <p>Step through execution, inspect operations, and explore complexity.</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-      <section className="visualizer-landing-section" aria-labelledby="visualizer-structures">
-        <h2 id="visualizer-structures">Data Structures</h2>
-        <div className="visualizer-landing-grid">
-          {structures.map((item) => (
-            <Link
-              className="visualizer-landing-card"
-              href={`/visualizer/${item.metadata.slug}`}
-              key={item.metadata.slug}
-            >
-              <span className="visualizer-landing-card__meta">
-                Data Structure · {item.metadata.category}
-              </span>
-              <h2>{item.metadata.title}</h2>
-              <p>Inspect state changes and understand how the structure evolves.</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
+export const metadata: Metadata = {
+  title: "Interactive Lab — Visualize Algorithms and Data Structures",
+  description:
+    "Explore step-by-step algorithm and data-structure visualizers in the LogicLab Interactive Lab.",
+};
+
+export default function InteractiveLabPage() {
+  const content = [...getDiscoveryContent("ALGORITHM"), ...getDiscoveryContent("DATA_STRUCTURE")];
+
+  const items: InteractiveLabItem[] = content
+    .filter((item) => item.metadata.isActive && Boolean(item.metadata.visualizationType))
+    .map((item) => ({
+      slug: item.metadata.slug,
+      title: item.metadata.title,
+      summary: item.metadata.summary,
+      contentType: item.metadata.type as Extract<SourceContentType, "ALGORITHM" | "DATA_STRUCTURE">,
+      category: item.metadata.category,
+      difficulty: item.metadata.difficulty as Difficulty,
+      visualizationType: item.metadata.visualizationType as string,
+    }));
+
+  return <InteractiveLab items={items} />;
 }

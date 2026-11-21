@@ -11,6 +11,8 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
+  const isStandaloneChallengeRoute =
+    pathname === "/challenges" || pathname.startsWith("/challenges/");
 
   useEffect(() => {
     let cancelled = false;
@@ -28,7 +30,6 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
     };
   }, []);
 
-  // Keyboard shortcut Ctrl+K / Cmd+K to focus search without stealing from editable controls
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
@@ -55,7 +56,6 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // Handle Escape key and overlay scroll locking
   useEffect(() => {
     if (!sidebarOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -69,6 +69,10 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [sidebarOpen]);
+
+  // Challenges has its own purpose-built learning workspace shell. Bypass the
+  // global shell on these routes to avoid rendering a second header/sidebar.
+  if (isStandaloneChallengeRoute) return <>{children}</>;
 
   return (
     <div className="app-shell">

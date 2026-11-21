@@ -19,7 +19,7 @@ export const BINARY_SEARCH_METADATA: AlgorithmMetadata = {
 };
 
 /**
- * Pure Binary Search on sorted numbers.
+ * Binary Search on monotonically sorted numbers (ascending or descending).
  */
 export function binarySearch(
   sortedArray: readonly number[],
@@ -28,6 +28,8 @@ export function binarySearch(
 ): SearchResult {
   let low = 0;
   let high = sortedArray.length - 1;
+  const ascending =
+    sortedArray.length < 2 || sortedArray[0]! <= sortedArray[sortedArray.length - 1]!;
   let comparisons = 0;
   let steps = 0;
 
@@ -46,7 +48,8 @@ export function binarySearch(
       };
     }
 
-    if (midVal < target) {
+    const targetIsAfterMid = ascending ? midVal < target : midVal > target;
+    if (targetIsAfterMid) {
       low = mid + 1;
     } else {
       high = mid - 1;

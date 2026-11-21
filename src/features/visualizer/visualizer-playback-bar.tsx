@@ -89,7 +89,7 @@ export function VisualizerPlaybackBar({
           <RestartIcon aria-hidden="true" />
           <span>Restart</span>
         </button>
-        <BookmarkButton slug={slug} stepNumber={step} />
+        <BookmarkButton slug={slug} stepNumber={step} compact />
         <label className="visualizer-speed">
           Speed
           <select value={speed} onChange={(e) => onSpeedChange(Number(e.target.value))}>

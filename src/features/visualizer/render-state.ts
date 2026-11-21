@@ -95,23 +95,55 @@ function arrayState(
   } else if (step.event.type === "PIVOT" && typeof payload.index === "number") {
     elementStates[payload.index] = "pivot";
   } else if (step.event.type === "FOUND" && typeof payload.index === "number") {
-    for (let i = 0; i < after.length; i++) elementStates[i] = "disabled";
+    // Keep non-target search cells in their normal blue state on the final result frame.
+    // Only the matched value receives the success treatment, as shown in the approved UI.
     elementStates[payload.index] = "success";
+    const previousComparison = trace.steps
+      .slice(0, step.stepIndex)
+      .slice()
+      .reverse()
+      .find((candidate) => candidate.event.type === "COMPARE");
+    const previousPayload = (previousComparison?.event.payload ?? {}) as Record<string, unknown>;
+    for (const pointerName of ["low", "mid", "high"] as const) {
+      const pointerValue = previousPayload[pointerName];
+      if (typeof pointerValue === "number") pointers[pointerName] = pointerValue;
+    }
     pointers.found = payload.index;
   } else if (step.event.type === "NOT_FOUND") {
     for (let i = 0; i < after.length; i++) elementStates[i] = "disabled";
+    const previousComparison = trace.steps
+      .slice(0, step.stepIndex)
+      .slice()
+      .reverse()
+      .find((candidate) => candidate.event.type === "COMPARE");
+    const previousPayload = (previousComparison?.event.payload ?? {}) as Record<string, unknown>;
+    for (const pointerName of ["low", "mid", "high"] as const) {
+      const pointerValue = previousPayload[pointerName];
+      if (typeof pointerValue === "number") pointers[pointerName] = pointerValue;
+    }
   } else if (step.event.type === "MARK_SORTED") {
     indexes.forEach((index) => {
       elementStates[index] = "sorted";
     });
   } else if (step.event.type === "COMPLETE" && isSearch) {
-    const foundStep = trace.steps
-      .slice(0, step.stepIndex + 1)
-      .findLast((s) => s.event.type === "FOUND");
+    const precedingSteps = trace.steps.slice(0, step.stepIndex + 1);
+    const foundStep = precedingSteps
+      .slice()
+      .reverse()
+      .find((candidate) => candidate.event.type === "FOUND");
     const foundPayload = (foundStep?.event.payload ?? {}) as Record<string, unknown>;
     const foundIndex = typeof foundPayload.index === "number" ? foundPayload.index : undefined;
-    for (let i = 0; i < after.length; i++) elementStates[i] = "disabled";
+    const previousComparison = precedingSteps
+      .slice()
+      .reverse()
+      .find((candidate) => candidate.event.type === "COMPARE");
+    const previousPayload = (previousComparison?.event.payload ?? {}) as Record<string, unknown>;
+    for (const pointerName of ["low", "mid", "high"] as const) {
+      const pointerValue = previousPayload[pointerName];
+      if (typeof pointerValue === "number") pointers[pointerName] = pointerValue;
+    }
     if (foundIndex !== undefined) {
+      // The completed search frame should preserve the blue default bars around the match.
       elementStates[foundIndex] = "success";
       pointers.found = foundIndex;
     }

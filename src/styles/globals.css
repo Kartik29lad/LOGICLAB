@@ -158,13 +158,7 @@ kbd,
     transform: translateX(0);
   }
   .app-main {
-    grid-column: auto;
-    grid-row: auto;
-    padding: var(--space-5);
-  }
-  .shell-footer {
-    grid-column: auto;
-    grid-row: auto;
+    padding: var(--space-6);
   }
 }
 
@@ -3081,6 +3075,31 @@ html[data-reduced-motion="true"] *::after {
   scroll-behavior: auto !important;
 }
 
+/* Dedicated Challenges shell: isolated so other pages keep the shared app chrome. */
+.app-shell--challenge-route {
+  display: block;
+  min-height: 100vh;
+  background: #07111b;
+}
+
+.app-shell--challenge-route > .app-main {
+  display: block;
+  min-height: 100vh;
+  padding: 0;
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.app-shell--challenge-route .app-main-inner {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.app-shell--challenge-route .shell-footer {
+  display: none;
+}
+
 /* Search-page shell refinements: mirror the compact navigation in the approved reference
    without changing the shared navigation used by other routes. */
 
@@ -3190,6 +3209,10 @@ html[data-reduced-motion="true"] *::after {
   box-shadow: none;
 }
 
+.app-shell:has([data-page="global-search"]) .sidebar-brand__mark svg {
+  display: none;
+}
+
 .app-shell:has([data-page="global-search"]) .sidebar-brand__mark::after {
   content: "</>";
   color: #42e2cc;
@@ -3258,5 +3281,136 @@ html[data-reduced-motion="true"] *::after {
 @media (max-width: 560px) {
   .app-shell:has([data-page="global-search"]) .app-header .header-search {
     width: min(100%, 19rem);
+  }
+}
+
+/* Interactive Lab shell refinements: match the approved reference's wider rail and centered content-header search. */
+body:has(.interactive-lab-page) .app-shell {
+  --sidebar-width: 15.9rem;
+}
+
+body:has(.interactive-lab-page) .app-header .brand {
+  display: none;
+}
+
+body:has(.interactive-lab-page) .app-header .header-search {
+  width: min(46.5rem, calc(100% - 8rem));
+  max-width: 46.5rem;
+  flex: 0 1 46.5rem;
+  margin-inline: auto;
+}
+
+/* The reference uses the code-in-hex mark and the compact sidebar wordmark. */
+body:has(.interactive-lab-page) .sidebar-brand__mark {
+  width: 2.7rem;
+  height: 2.7rem;
+  border: 0;
+  border-radius: 0;
+  color: #36e5ec;
+  font-size: 0;
+}
+
+body:has(.interactive-lab-page) .sidebar-brand__mark svg {
+  display: block;
+  width: 2.65rem;
+  height: 2.65rem;
+  overflow: visible;
+}
+
+body:has(.interactive-lab-page) .sidebar-brand__copy strong em {
+  color: #39dfe7;
+  font-style: normal;
+}
+
+body:has(.interactive-lab-page) .app-sidebar {
+  padding: 1rem 0.9rem 1.1rem;
+  background: #06131f;
+  border-right-color: #1b3445;
+}
+
+body:has(.interactive-lab-page) .app-sidebar .sidebar-brand {
+  min-height: 3.35rem;
+  margin-bottom: 1.15rem;
+  padding: 0.05rem 0.45rem 1.05rem;
+  gap: 0.65rem;
+  border-bottom-color: #1b3445;
+}
+
+body:has(.interactive-lab-page) .sidebar-brand__copy strong {
+  font-size: 1.08rem;
+  letter-spacing: -0.025em;
+}
+
+body:has(.interactive-lab-page) .sidebar-brand__copy small {
+  margin-top: 0.15rem;
+  font-size: 0.66rem;
+}
+
+body:has(.interactive-lab-page) .app-sidebar .nav-group {
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.85rem;
+  border-bottom-color: #20394a;
+}
+
+body:has(.interactive-lab-page) .app-sidebar .nav-group h2 {
+  padding: 0.15rem 0.7rem 0.45rem;
+  color: #a8bdca;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.055em;
+}
+
+body:has(.interactive-lab-page) .app-sidebar .nav-list {
+  gap: 0.18rem;
+}
+
+body:has(.interactive-lab-page) .app-sidebar .nav-item {
+  min-height: 2.55rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.62rem;
+  color: #dbe6ee;
+  font-size: 0.88rem;
+  font-weight: 560;
+}
+
+body:has(.interactive-lab-page) .app-sidebar .nav-item__icon {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+body:has(.interactive-lab-page) .app-sidebar .nav-item--active {
+  background: linear-gradient(100deg, rgba(0, 191, 190, 0.34), rgba(0, 113, 127, 0.28));
+  color: #eaffff;
+  box-shadow: inset 0 0 0 1px rgba(27, 213, 208, 0.09);
+}
+
+body:has(.interactive-lab-page) .app-sidebar .nav-item--active::before {
+  top: 18%;
+  bottom: 18%;
+  width: 2px;
+  background: #35e5e6;
+  box-shadow: 0 0 10px rgba(53, 229, 230, 0.48);
+}
+
+body:has(.interactive-lab-page) .app-sidebar .nav-group:last-child {
+  margin-top: auto;
+  margin-bottom: 0.6rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #20394a;
+}
+
+@media (max-width: 900px) {
+  body:has(.interactive-lab-page) .app-shell {
+    --sidebar-width: 15rem;
+  }
+
+  body:has(.interactive-lab-page) .app-header .brand {
+    display: inline-flex;
+  }
+
+  body:has(.interactive-lab-page) .app-header .header-search {
+    width: min(38rem, 60vw);
+    flex: 1 1 20rem;
+    margin-inline: 0;
   }
 }

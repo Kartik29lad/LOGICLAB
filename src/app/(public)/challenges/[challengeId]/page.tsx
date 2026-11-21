@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { canonicalMetadata } from "@/lib/seo";
-
-import { CHALLENGE_DEFINITIONS } from "../../../../content/challenges";
-import { ChallengeWorkspace } from "../../../../features/challenges";
+import { CHALLENGE_DEFINITIONS } from "@/content/challenges";
+import { ChallengeWorkspace } from "@/features/challenges";
 
 export function generateStaticParams() {
-  return CHALLENGE_DEFINITIONS.map((c) => ({
-    challengeId: c.id,
+  return CHALLENGE_DEFINITIONS.map((challenge) => ({
+    challengeId: challenge.id,
   }));
 }
 
@@ -20,7 +18,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { challengeId } = await params;
   const challenge = CHALLENGE_DEFINITIONS.find(
-    (c) => c.id === challengeId || c.slug === challengeId
+    (item) => item.id === challengeId || item.slug === challengeId
   );
   if (!challenge) {
     return canonicalMetadata(`/challenges/${challengeId}`, {
@@ -41,28 +39,11 @@ export default async function ChallengeDetailPage({
 }) {
   const { challengeId } = await params;
   const challenge = CHALLENGE_DEFINITIONS.find(
-    (c) => c.id === challengeId || c.slug === challengeId
+    (item) => item.id === challengeId || item.slug === challengeId
   );
-  if (!challenge) {
-    notFound();
-    return null;
-  }
+  if (!challenge) notFound();
 
   return (
-    <main className="page-content">
-      <header className="page-header">
-        <div>
-          <div className="breadcrumb-nav">
-            <Link href="/challenges" className="button button--secondary button--sm">
-              ← All Challenges
-            </Link>
-          </div>
-          <span className="page-header__eyebrow">Practice Exercise</span>
-          <h1>{challenge.title}</h1>
-          <p>{challenge.description}</p>
-        </div>
-      </header>
-      <ChallengeWorkspace challenges={CHALLENGE_DEFINITIONS} initialChallengeId={challenge.id} />
-    </main>
+    <ChallengeWorkspace challenges={CHALLENGE_DEFINITIONS} initialChallengeId={challenge.id} />
   );
 }

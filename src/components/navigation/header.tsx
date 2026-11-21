@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { CloseIcon, MenuIcon, SearchIcon } from "./icons";
 
@@ -44,6 +47,9 @@ export function Header({
   menuOpen,
   searchAction = "/search",
 }: Readonly<{ onMenuClick: () => void; menuOpen: boolean; searchAction?: string }>) {
+  const pathname = usePathname();
+  const isVisualizerArea = pathname === "/visualizer" || pathname.startsWith("/visualizer/");
+
   return (
     <header className="app-header">
       <button
@@ -56,7 +62,12 @@ export function Header({
       >
         {menuOpen ? <CloseIcon /> : <MenuIcon />}
       </button>
-      <Link href="/" className="brand" aria-label="LogicLab home">
+      <Link
+        href="/"
+        className="brand"
+        aria-label="LogicLab home"
+        style={isVisualizerArea ? { display: "none" } : undefined}
+      >
         <span className="brand__mark" aria-hidden="true">
           ⌬
         </span>
@@ -65,7 +76,21 @@ export function Header({
           <small>Explore. Visualize. Understand.</small>
         </span>
       </Link>
-      <form className="header-search" role="search" action={searchAction}>
+      <form
+        className="header-search"
+        role="search"
+        action={searchAction}
+        style={
+          isVisualizerArea
+            ? {
+                width: "min(46.5rem, calc(100% - 8rem))",
+                maxWidth: "46.5rem",
+                flex: "0 1 46.5rem",
+                marginInline: "auto",
+              }
+            : undefined
+        }
+      >
         <span className="header-search__icon" aria-hidden="true">
           <SearchIcon />
         </span>
@@ -73,11 +98,15 @@ export function Header({
           id="global-search-input"
           name="q"
           aria-label="Search LogicLab"
-          placeholder="Search algorithms, data structures, topics..."
+          placeholder={
+            isVisualizerArea
+              ? "Search topics, visualizers, practice..."
+              : "Search algorithms, data structures, topics..."
+          }
           autoComplete="off"
         />
         <kbd className="header-search__kbd" aria-hidden="true">
-          Ctrl K
+          Ctrl + K
         </kbd>
       </form>
       <nav className="header-actions" aria-label="Global actions">

@@ -46,6 +46,13 @@ describe("Phase 5: Searching Algorithm Core Engine", () => {
       expect(binarySearch(sorted, 91).foundIndex).toBe(9);
     });
 
+    it("finds values in descending sorted arrays", () => {
+      const descending = [21, 18, 13, 9, 7, 5, 2];
+      expect(binarySearch(descending, 9).foundIndex).toBe(3);
+      expect(binarySearch(descending, 21).foundIndex).toBe(0);
+      expect(binarySearch(descending, 2).foundIndex).toBe(6);
+    });
+
     it("returns -1 for elements not found in sorted array", () => {
       const sorted = [10, 20, 30, 40, 50];
       expect(binarySearch(sorted, 5).foundIndex).toBe(-1);

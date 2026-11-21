@@ -4,8 +4,62 @@ export const code: CodeReference[] = [
   {
     language: "typescript",
     entryPoint: "binary-search",
-    source:
-      'import type { AlgorithmMetadata, SearchResult } from "../../../contracts/algorithm.types";\n\nexport const BINARY_SEARCH_METADATA: AlgorithmMetadata = {\n  id: "searching-binary-search",\n  slug: "binary-search",\n  name: "Binary Search",\n  category: "searching",\n  description:\n    "Finds the position of a target value within a sorted array by repeatedly dividing the search interval in half.",\n  complexity: {\n    time: {\n      best: "O(1)",\n      average: "O(log n)",\n      worst: "O(log n)",\n    },\n    space: "O(1)",\n  },\n};\n\n/**\n * Pure Binary Search on sorted numbers.\n */\nexport function binarySearch(sortedArray: readonly number[], target: number): SearchResult {\n  let low = 0;\n  let high = sortedArray.length - 1;\n  let comparisons = 0;\n  let steps = 0;\n\n  while (low <= high) {\n    steps++;\n    const mid = Math.floor((low + high) / 2);\n    const midVal = sortedArray[mid]!;\n\n    comparisons++;\n    if (midVal === target) {\n      return {\n        foundIndex: mid,\n        metrics: { comparisons, steps },\n      };\n    }\n\n    if (midVal < target) {\n      low = mid + 1;\n    } else {\n      high = mid - 1;\n    }\n  }\n\n  return {\n    foundIndex: -1,\n    metrics: { comparisons, steps },\n  };\n}\n',
-    stepMappings: [{ action: "MAIN", startLine: 1, endLine: 54 }],
+    source: `import type { AlgorithmMetadata, SearchResult } from "../../../contracts/algorithm.types";
+
+export const BINARY_SEARCH_METADATA: AlgorithmMetadata = {
+  id: "searching-binary-search",
+  slug: "binary-search",
+  name: "Binary Search",
+  category: "searching",
+  description:
+    "Finds the position of a target value within an ascending or descending sorted array by repeatedly dividing the search interval in half.",
+  complexity: {
+    time: {
+      best: "O(1)",
+      average: "O(log n)",
+      worst: "O(log n)",
+    },
+    space: "O(1)",
+  },
+};
+
+/**
+ * Binary Search on ascending or descending sorted numbers.
+ */
+export function binarySearch(sortedArray: readonly number[], target: number): SearchResult {
+  let low = 0;
+  let high = sortedArray.length - 1;
+  const ascending = sortedArray.length < 2 || sortedArray[0]! <= sortedArray[sortedArray.length - 1]!;
+  let comparisons = 0;
+  let steps = 0;
+
+  while (low <= high) {
+    steps++;
+    const mid = Math.floor((low + high) / 2);
+    const midVal = sortedArray[mid]!;
+
+    comparisons++;
+    if (midVal === target) {
+      return {
+        foundIndex: mid,
+        metrics: { comparisons, steps },
+      };
+    }
+
+    const targetIsAfterMid = ascending ? midVal < target : midVal > target;
+    if (targetIsAfterMid) {
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return {
+    foundIndex: -1,
+    metrics: { comparisons, steps },
+  };
+}
+`,
+    stepMappings: [{ action: "MAIN", startLine: 1, endLine: 55 }],
   },
 ];

@@ -7,6 +7,13 @@ export interface ChallengeOption {
   label: string;
 }
 
+export interface ChallengeExample {
+  title?: string;
+  input: string;
+  output: string;
+  explanation?: string;
+}
+
 export interface ChallengeDefinition {
   id: string;
   slug: string;
@@ -16,6 +23,8 @@ export interface ChallengeDefinition {
   difficulty: Difficulty;
   interaction: ChallengeInteraction;
   prompt: string;
+  examples?: ChallengeExample[];
+  constraints?: string[];
   options?: ChallengeOption[];
   acceptedAnswers: string[];
   correctAnswer: string;

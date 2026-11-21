@@ -19,6 +19,23 @@ export function middleware(request: NextRequest) {
     }
   }
   const response = applySecurityHeaders(NextResponse.next());
+  if (request.nextUrl.pathname === "/api/challenges/runner-worker") {
+    // This same-origin worker executes learner code in a worker global with no DOM.
+    // Its own CSP permits dynamic compilation only inside the worker and blocks network,
+    // imports, nested workers, forms, plugins, and external resources.
+    response.headers.set(
+      "Content-Security-Policy",
+      [
+        "default-src 'none'",
+        "script-src 'unsafe-eval'",
+        "connect-src 'none'",
+        "worker-src 'none'",
+        "object-src 'none'",
+        "base-uri 'none'",
+        "form-action 'none'",
+      ].join("; ")
+    );
+  }
   if (request.nextUrl.pathname.startsWith("/api/"))
     response.headers.set("Cache-Control", "no-store");
   return response;

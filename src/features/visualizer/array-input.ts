@@ -45,8 +45,8 @@ export function validateArrayExperiment(
 ): string | null {
   if (values.length > MAX_INTERACTIVE_ARRAY_LENGTH)
     return `Use at most ${MAX_INTERACTIVE_ARRAY_LENGTH} values.`;
-  if (slug === "binary-search" && !isSortedAscending(values))
-    return "Binary Search requires the array to be sorted in ascending order.";
+  if (slug === "binary-search" && !isSortedAscending(values) && !isSortedDescending(values))
+    return "Binary Search requires the array to be sorted in ascending or descending order.";
   if ((slug === "linear-search" || slug === "binary-search") && !Number.isFinite(target))
     return "Enter a finite target value before running this search.";
   return null;
@@ -55,6 +55,13 @@ export function validateArrayExperiment(
 export function isSortedAscending(values: readonly number[]): boolean {
   for (let index = 1; index < values.length; index += 1) {
     if (values[index - 1]! > values[index]!) return false;
+  }
+  return true;
+}
+
+export function isSortedDescending(values: readonly number[]): boolean {
+  for (let index = 1; index < values.length; index += 1) {
+    if (values[index - 1]! < values[index]!) return false;
   }
   return true;
 }

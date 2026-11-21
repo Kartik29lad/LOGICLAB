@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { canonicalMetadata } from "@/lib/seo";
@@ -45,17 +46,36 @@ export default async function AlgorithmVisualizerPage({
     notFound();
     return null;
   }
+  const category = item.metadata.category
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
   return (
-    <div className="visualizer-route">
-      <header className="page-header">
-        <div>
-          <span className="page-header__eyebrow">LogicLab Laboratory</span>
-          <h1>{item.metadata.title} Visualizer</h1>
-          <p>
-            Execute the algorithm, inspect every canonical event, and learn from the visual state.
-          </p>
-        </div>
-      </header>
+    <div className="visualizer-route visualizer-route--workspace">
+      <nav className="visualizer-breadcrumb" aria-label="Breadcrumb">
+        <ol>
+          <li>
+            <Link href="/" aria-label="Home">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m3 10 9-7 9 7M5.5 9v11h13V9M9.5 20v-6h5v6" />
+              </svg>
+              <span>Home</span>
+            </Link>
+          </li>
+          <li aria-hidden="true">›</li>
+          <li>
+            <Link href="/visualizer">Interactive Lab</Link>
+          </li>
+          <li aria-hidden="true">›</li>
+          <li>
+            <Link href="/algorithms">{category}</Link>
+          </li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page">{item.metadata.title}</li>
+        </ol>
+      </nav>
       <VisualizerClientShell
         slug={algorithmSlug}
         title={item.metadata.title}

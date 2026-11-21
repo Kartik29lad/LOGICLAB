@@ -19,7 +19,7 @@ export const content: ContentPackage = {
     expectedInteraction: "Predict the next correct operation or state.",
   },
   execution: {
-    inputRules: ["Sorted finite array", "Target value", "Ascending order in this implementation"],
+    inputRules: ["Finite array sorted in ascending or descending order", "Target value"],
     metrics: ["comparisons", "steps"],
     finalResult: "The target index, or -1 when absent.",
     sampleTrace: ["SET_CURRENT", "COMPARE", "NARROW_RANGE", "FOUND"],

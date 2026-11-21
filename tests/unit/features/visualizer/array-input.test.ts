@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   isSortedAscending,
+  isSortedDescending,
   MAX_INTERACTIVE_ARRAY_LENGTH,
   parseArrayInput,
   validateArrayExperiment,
@@ -27,17 +28,20 @@ describe("array interactive input", () => {
     expect(parseArrayInput(input).error).toContain("at most");
   });
 
-  it("requires a sorted array for binary search", () => {
+  it("accepts ascending and descending sorted arrays for binary search", () => {
     expect(validateArrayExperiment("binary-search", [3, 1, 2], 2)).toContain("sorted");
     expect(validateArrayExperiment("binary-search", [1, 2, 3], 2)).toBeNull();
+    expect(validateArrayExperiment("binary-search", [3, 2, 1], 2)).toBeNull();
   });
 
   it("requires a target for search algorithms", () => {
     expect(validateArrayExperiment("linear-search", [1, 2, 3], undefined)).toContain("target");
   });
 
-  it("checks ascending order", () => {
+  it("checks both ascending and descending order", () => {
     expect(isSortedAscending([1, 2, 2, 3])).toBe(true);
     expect(isSortedAscending([1, 3, 2])).toBe(false);
+    expect(isSortedDescending([3, 2, 2, 1])).toBe(true);
+    expect(isSortedDescending([3, 1, 2])).toBe(false);
   });
 });

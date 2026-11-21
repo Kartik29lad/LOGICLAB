@@ -245,6 +245,19 @@ export function useVisualizerExecution({
   }, [createPlaybackController, trace]);
 
   useEffect(() => {
+    if (slug !== "binary-search" || inputRevision !== 0 || !trace || !controllerRef.current) return;
+    const resultStep = trace.steps.find(
+      (traceStep) => traceStep.event.type === "FOUND" || traceStep.event.type === "NOT_FOUND"
+    );
+    if (!resultStep) return;
+
+    // Present the canonical result state on first entry, as in the approved reference.
+    // The trace remains intact; Restart and Play still replay its real execution steps.
+    controllerRef.current.setStep(resultStep.stepIndex);
+    setStatus("READY");
+  }, [inputRevision, slug, trace]);
+
+  useEffect(() => {
     controllerRef.current?.setSpeed(speed);
     coordinatorRef.current?.setSpeed(speed);
   }, [speed]);
@@ -253,9 +266,20 @@ export function useVisualizerExecution({
     (action: "play" | "pause" | "next" | "previous" | "restart"): void => {
       const guard = guardPlaybackInteraction(action, status, trace?.steps.length ?? 0);
       if (!guard.allowed) return;
+      if (
+        action === "play" &&
+        slug === "binary-search" &&
+        inputRevision === 0 &&
+        stepState.stepIndex > 0 &&
+        status === "READY"
+      ) {
+        controllerRef.current?.restart();
+        controllerRef.current?.play();
+        return;
+      }
       controllerRef.current?.[action]();
     },
-    [status, trace]
+    [inputRevision, slug, status, stepState.stepIndex, trace]
   );
 
   const changeSpeed = (value: number): void => {

@@ -53,6 +53,20 @@ export function VisualizerModeToggle({
         onClick={onTogglePrediction}
         className="visualizer-mode-toggle__btn"
       >
+        <svg
+          viewBox="0 0 24 24"
+          width="17"
+          height="17"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 2.8 13.8 4l2.2-.2 1.1 1.9 2 .9-.1 2.2 1.2 1.8-1.2 1.8.1 2.2-2 .9-1.1 1.9-2.2-.2-1.8 1.2-1.8-1.2-2.2.2-1.1-1.9-2-.9.1-2.2L4 10.8l1.2-1.8-.1-2.2 2-.9 1.1-1.9 2.2.2L12 2.8Z" />
+          <circle cx="12" cy="11.4" r="3" />
+        </svg>
         <span>{predictionMode ? "Exit Prediction" : "Prediction Mode"}</span>
       </button>
     </div>
